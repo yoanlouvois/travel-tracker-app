@@ -28,12 +28,26 @@ L.tileLayer(
   'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',
   {
     attribution: '&copy; OpenStreetMap &copy; Stadia Maps',
-    maxZoom: 19
+    maxZoom: 19,
+    minZoom: 3, 
   }
 ).addTo(map)
+
+const southWest = L.latLng(-85, -180)
+const northEast = L.latLng(85, 180)
+const bounds = L.latLngBounds(southWest, northEast)
+
+map.setMaxBounds(bounds)
+map.on('drag', () => map.panInsideBounds(bounds, { animate: false }))
+
+// Init mode "pays visités" (chargement GeoJSON + interactions)
+window.initPlaces(map)
+window.initVisitedCountriesMode(map)
+window.initRoadtrips(map)
 
 // ===== Search (pas de logique encore) =====
 document.getElementById('btnSearch').addEventListener('click', () => {
   const q = document.getElementById('searchInput').value.trim()
   console.log("Recherche:", q)
 })
+

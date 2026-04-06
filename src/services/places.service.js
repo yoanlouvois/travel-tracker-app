@@ -2,7 +2,7 @@ const prisma = require('../prisma')
 
 // -------- LIST --------
 // Option: { countryId, type }
-async function list({ countryId, type } = {}) {
+async function list({ countryId, type, visited } = {}) {
   const where = {}
 
   if (countryId) {
@@ -11,6 +11,10 @@ async function list({ countryId, type } = {}) {
 
   if (type) {
     where.type = type
+  }
+
+  if (visited !== undefined) {
+    where.visited = visited
   }
 
   return prisma.place.findMany({
@@ -50,6 +54,7 @@ async function create(data) {
     lng,
     type,
     description,
+    visited,
     visitedAt,
     source,
     nominatimPlaceId,
@@ -77,6 +82,7 @@ async function create(data) {
       lng,
       type,
       description,
+      visited: visited ?? false,
       visitedAt: visitedAt ? new Date(visitedAt) : null,
       source: source ?? 'MANUAL',
       nominatimPlaceId,
@@ -99,6 +105,7 @@ async function update(id, data) {
   if (data.type !== undefined) updateData.type = data.type
   if (data.lat !== undefined) updateData.lat = data.lat
   if (data.lng !== undefined) updateData.lng = data.lng
+  if (data.visited !== undefined) updateData.visited = data.visited
   if (data.visitedAt !== undefined)
     updateData.visitedAt = data.visitedAt ? new Date(data.visitedAt) : null
 

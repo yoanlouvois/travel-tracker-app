@@ -7,12 +7,11 @@ datasource db {
 }
 
 enum PlaceType {
-  TO_VISIT
-  VISITED
-  MONUMENT
+  DEFAULT
+  CITY
+  HIKE
   ACTIVITY
-  LANDSCAPE
-  POINT_OF_VIEW
+  VIEWPOINT
 }
 
 enum GeoSource {
@@ -30,6 +29,7 @@ model Country {
   iso2             String  @unique
   name             String
   uiCoverImagePath String?
+  visited          Boolean @default(false)
 
   places           Place[]
   countryVlogs     CountryVlog[]
@@ -43,6 +43,7 @@ model Place {
   name             String
   description      String?
   type             PlaceType
+  visited          Boolean @default(false)
   visitedAt        DateTime?
   lat              Float
   lng              Float
@@ -89,7 +90,7 @@ model TripStop {
   lng        Float?
   orderIndex Int
 
-  @@index([tripId, orderIndex])
+  @@unique([tripId, orderIndex])
 }
 
 model Vlog {

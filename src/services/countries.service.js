@@ -34,7 +34,8 @@ async function create(data) {
     data: {
       name: data.name,
       iso2: data.iso2.toUpperCase(),
-      uiCoverImagePath: data.uiCoverImagePath ?? null
+      uiCoverImagePath: data.uiCoverImagePath ?? null,
+      visited: data.visited ?? false
     }
   })
 }
@@ -50,7 +51,8 @@ async function update(id, data) {
     data: {
       name: data.name,
       iso2: data.iso2 ? data.iso2.toUpperCase() : undefined,
-      uiCoverImagePath: data.uiCoverImagePath
+      uiCoverImagePath: data.uiCoverImagePath,
+      visited: data.visited
     }
   })
 }

@@ -3,6 +3,8 @@ const express = require('express')
 const countriesController = require('./controllers/countries.controller')
 const vlogsController = require('./controllers/vlogs.controller')
 const placesController = require('./controllers/places.controller')
+const tripsController = require('./controllers/trips.controller')
+const mediaController = require('./controllers/media.controller')
 
 const router = express.Router()
 
@@ -31,5 +33,24 @@ router.get('/places/:id', placesController.getById)
 router.post('/places', placesController.create)
 router.patch('/places/:id', placesController.update)
 router.delete('/places/:id', placesController.remove)
+
+// Trips
+router.get('/trips', tripsController.list)
+router.get('/trips/:id', tripsController.getById)
+router.post('/trips', tripsController.create)
+router.patch('/trips/:id', tripsController.update)
+router.delete('/trips/:id', tripsController.remove)
+
+// Stops
+router.post('/trips/:id/stops', tripsController.addStop)
+router.patch('/trips/stops/:stopId', tripsController.updateStop)
+router.delete('/trips/stops/:stopId', tripsController.removeStop)
+
+// Media
+router.get('/media', mediaController.list)
+router.get('/media/:id', mediaController.getById)
+router.post('/media', mediaController.create)
+router.patch('/media/:id', mediaController.update)
+router.delete('/media/:id', mediaController.remove)
 
 module.exports = router

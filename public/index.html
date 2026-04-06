@@ -6,86 +6,41 @@
   <title>Travel Map</title>
 
   <!-- Bootstrap (local) -->
-  <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Leaflet (local) -->
   <link rel="stylesheet" href="/leaflet/leaflet.css" />
-
-  <style>
-    html, body { height: 100%; margin: 0; }
-    body { overflow: hidden; }
-
-    /* Header + contenu plein écran */
-    .app {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    header { flex: 0 0 auto; }
-
-    /* Layout 2 panneaux: sidebar + map */
-    .main {
-      flex: 1 1 auto;
-      display: grid;
-      grid-template-columns: 0px 1fr; /* sidebar fermée par défaut */
-      transition: grid-template-columns 180ms ease;
-      height: 100%;
-      min-height: 0; /* important pour que #map prenne bien la place */
-    }
-
-    .main.sidebar-open {
-      grid-template-columns: 360px 1fr; /* largeur du panneau ouvert */
-    }
-
-    /* Sidebar */
-    .sidebar {
-      height: 100%;
-      border-right: 1px solid rgba(255,255,255,0.08);
-      background: #0b1220; /* bleu nuit */
-      color: #e5e7eb;
-      overflow: hidden; /* évite le contenu visible quand fermé */
-    }
-
-    .sidebar-inner {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      padding: 12px;
-      gap: 12px;
-    }
-
-    /* Map */
-    #map {
-      height: 100%;
-      width: 100%;
-    }
-
-    /* Navbar recherche dans la sidebar */
-    .sidebar .navbar {
-      border-radius: 12px;
-    }
-  </style>
+  <!-- Ton CSS -->
+  <link rel="stylesheet" href="/css/style.css" />
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 </head>
 
 <body>
   <div class="app">
 
     <!-- HEADER -->
-    <header class="bg-dark border-bottom">
-      <div class="container-fluid py-2 d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center gap-2">
-          <button id="btnMenu" class="btn btn-outline-light btn-sm" type="button">
+    <header class="app-header">
+      <div class="header-inner">
+    
+        <!-- Gauche -->
+        <div class="header-left">
+          <button id="btnMenu" class="btn btn-header" type="button">
             ☰ Menu
           </button>
-          <span class="text-white-50 small">Travel Map</span>
         </div>
-
-        <!-- Boutons à droite (pas de click géré pour l'instant) -->
-        <div class="d-flex gap-2">
-          <button class="btn btn-outline-light btn-sm" type="button">Mon profil</button>
-          <button class="btn btn-outline-light btn-sm" type="button">Mes pays</button>
-          <button class="btn btn-outline-light btn-sm" type="button">Mes places</button>
+    
+        <!-- Centre -->
+        <div class="header-center">
+          <h1 class="app-title">Travel Map</h1>
         </div>
+    
+        <!-- Droite -->
+        <div class="header-right">
+          <button class="btn btn-header" type="button">Mon profil</button>
+          <button class="btn btn-header" type="button">Mes pays</button>
+          <button class="btn btn-header" type="button">Mes places</button>
+        </div>
+    
       </div>
     </header>
 
@@ -97,7 +52,7 @@
         <div class="sidebar-inner">
 
           <!-- Navbar search -->
-          <nav class="navbar navbar-light bg-light px-2">
+          <nav class="navbar sidebar-search">
             <form class="d-flex w-100" role="search" onsubmit="return false;">
               <input
                 id="searchInput"
@@ -110,15 +65,93 @@
             </form>
           </nav>
 
-          <!-- Zone “future contenu” -->
-          <div class="small text-white-50">
-            Ici tu mettras ensuite :
-            <ul class="mt-2">
-              <li>filtres</li>
-              <li>résultats</li>
-              <li>actions road-trip</li>
-              <li>etc.</li>
-            </ul>
+          <div class="filters-section">
+
+            <h6 class="filters-title">
+              <i class="bi bi-funnel"></i>
+              Filtres d'affichage
+            </h6>
+          
+            <div class="filters-group">
+          
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="filterVisited" checked>
+                <label class="form-check-label" for="filterVisited">
+                  Lieux visités
+                </label>
+              </div>
+          
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="filterToVisit" checked>
+                <label class="form-check-label" for="filterToVisit">
+                  À visiter
+                </label>
+              </div>
+
+              <hr class="filter-separator">
+
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="filterVille" checked>
+                <label class="form-check-label" for="filterVille">
+                  Villes
+                </label>
+              </div>
+
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="filterRadonnee" checked>
+                <label class="form-check-label" for="filterRadonnee">
+                  Randonnées
+                </label>
+              </div>
+
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="filterActivite" checked>
+                <label class="form-check-label" for="filterActivite">
+                  Activités
+                </label>
+              </div>
+
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="filterPointView" checked>
+                <label class="form-check-label" for="filterPointView">
+                  Points de vue
+                </label>
+              </div>
+          
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="filterRoadtrips" checked>
+                <label class="form-check-label" for="filterRoadtrips">
+                  Roadtrips
+                </label>
+              </div>
+          
+              <hr class="filter-separator">
+          
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="filterCountries">
+                <label class="form-check-label" for="filterCountries">
+                  Pays visités
+                </label>
+              </div>
+
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="filterCountriesToVisit">
+                <label class="form-check-label" for="filterCountriesToVisit">
+                  Pays à visiter
+                </label>
+              </div>
+
+              <hr class="filter-separator">
+
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="filterDetailledView">
+                <label class="form-check-label" for="filterDetailledView">
+                  Vue Détaillée
+                </label>
+              </div>
+          
+            </div>
+          
           </div>
 
           <div class="mt-auto d-flex justify-content-end">
@@ -131,15 +164,67 @@
       </aside>
 
       <!-- MAP -->
-      <main>
+      <main class="map-wrap">
+
         <div id="map"></div>
+      
+        <!-- TOOLBAR DROITE -->
+        <div class="map-toolbar">
+      
+          <button id="toolAddVisited" class="tool-btn" title="Ajouter un lieu">
+            <i class="bi bi-geo-alt"></i>
+          </button>
+
+          <button id="toolAddToVisit" class="tool-btn" title="A visiter">
+            <i class="bi bi-bookmark-heart"></i>
+          </button>
+
+          <button id="toolAddCity" class="tool-btn" title="Ville">
+            <i class="bi bi-buildings"></i>
+          </button>
+      
+          <button id="toolAddHike" class="tool-btn" title="Randonnée">
+            <i class="bi bi-backpack"></i>
+          </button>
+
+          <button id="toolAddActivity" class="tool-btn" title="Activité">
+            <i class="bi bi-bicycle"></i>
+          </button>
+
+          <button id="toolAddViewpoint" class="tool-btn" title="Point de vue">
+            <i class="bi bi-camera"></i>
+          </button>
+
+          <button id="toolAddRoadTrip" class="tool-btn" title="Roadtrip">
+            <i class="bi bi-signpost-2"></i>
+          </button>
+      
+          <button id="toolDeletePlace" class="tool-btn tool-danger" title="Supprimer">
+            <i class="bi bi-trash"></i>
+          </button>
+
+          <button id="toolCountries" class="tool-btn" title="Pays visités">
+            <i class="bi bi-globe-americas"></i>
+          </button>
+
+          <button id="toolCountriesFutur" class="tool-btn" title="Pays à visiter">
+            <i class="bi bi-binoculars"></i>
+          </button>
+      
+        </div>
+      
       </main>
 
     </div>
   </div>
 
-  <script src="/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/leaflet/leaflet.js"></script>
+  <script src="/js/map/toolManager.js"></script>
+  <script src="/js/map/isoCodes.js"></script>
+  <script src="/js/map/leafletPlaces.js"></script>
+  <script src="/js/map/leafletRoadtrip.js"></script>
+  <script src="/js/map/leafletCountries.js"></script>
   <script src="/js/index.js"></script>
 </body>
 </html>
