@@ -1,3 +1,4 @@
+// public/js/map/leafletCountries.js
 (function () {
   function initVisitedCountriesMode(map) {
     // =============================
@@ -25,7 +26,6 @@
     let countriesLayer = null
 
     function getiso3(feature) {
-      // ton GeoJSON: id est directement sur la feature
       return feature.id || feature.properties?.id || feature.properties?.iso_a2 || feature.properties?.ISO_A2
     }
 
@@ -93,10 +93,9 @@
     // =============================
     // FILTERS (affichage)
     // =============================
-    filterCountries.addEventListener('change', () => {
+    filterCountries?.addEventListener('change', () => {
       uiState.showVisitedCountries = filterCountries.checked
 
-      // si on coupe l'affichage, on coupe aussi l'outil si c'était lui
       if (!uiState.showVisitedCountries && window.ToolManager?.getActiveTool?.() === TOOL_VISITED) {
         window.ToolManager.setActiveTool(null)
       }
@@ -104,10 +103,9 @@
       refreshCountriesStyle()
     })
 
-    filterCountriesToVisit.addEventListener('change', () => {
+    filterCountriesToVisit?.addEventListener('change', () => {
       uiState.showCountriesToVisit = filterCountriesToVisit.checked
 
-      // si on coupe l'affichage, on coupe aussi l'outil si c'était lui
       if (!uiState.showCountriesToVisit && window.ToolManager?.getActiveTool?.() === TOOL_TOVISIT) {
         window.ToolManager.setActiveTool(null)
       }
@@ -118,21 +116,19 @@
     // =============================
     // TOOLS (sélection)
     // =============================
-    toolCountries.addEventListener('click', () => {
-      // ToolManager gère l'exclusivité
+    toolCountries?.addEventListener('click', () => {
       window.ToolManager?.toggleTool?.(TOOL_VISITED)
 
-      // activer automatiquement l'affichage associé
       uiState.showVisitedCountries = true
-      filterCountries.checked = true
+      if (filterCountries) filterCountries.checked = true
       refreshCountriesStyle()
     })
 
-    toolCountriesFutur.addEventListener('click', () => {
+    toolCountriesFutur?.addEventListener('click', () => {
       window.ToolManager?.toggleTool?.(TOOL_TOVISIT)
 
       uiState.showCountriesToVisit = true
-      filterCountriesToVisit.checked = true
+      if (filterCountriesToVisit) filterCountriesToVisit.checked = true
       refreshCountriesStyle()
     })
 
@@ -165,31 +161,58 @@
                 visitedCountries.delete(iso3)
               } else {
                 visitedCountries.add(iso3)
-                toVisitCountries.delete(iso3) // ne peut pas être les deux
+                toVisitCountries.delete(iso3)
               }
 
               refreshCountriesStyle()
-              return
             }
 
             // MODE TO VISIT
             if (uiState.countryToVisitPickMode) {
-              // ne peut pas être ajouté si déjà visité
-              if (visitedCountries.has(iso3)) return
+              if (!visitedCountries.has(iso3)) {
+                if (toVisitCountries.has(iso3)) {
+                  toVisitCountries.delete(iso3)
+                } else {
+                  toVisitCountries.add(iso3)
+                }
 
-              if (toVisitCountries.has(iso3)) {
-                toVisitCountries.delete(iso3)
-              } else {
-                toVisitCountries.add(iso3)
+                refreshCountriesStyle()
               }
-
-              refreshCountriesStyle()
             }
-            // toujours notifier quel pays a été cliqué (utile pour places)
+
+            // utile pour leafletPlaces / autres modules
             map.fire('country:click', {
               iso3,
-              latlng: e.latlng,
-              name: feature?.properties?.name || null,
+              latlng: e.latlng
+            })
+
+            const activeTool = window.ToolManager?.getActiveTool?.()
+            
+            const blockInfoPanelTools = [
+              'addVisited',
+              'addToVisit',
+              'addCity',
+              'addHike',
+              'addActivity',
+              'addViewpoint',
+              'addRoadtrip',
+              'deletePlace',
+              'countriesVisited',
+              'countriesToVisit'
+            ]
+
+            if (blockInfoPanelTools.includes(activeTool)) {
+              return
+            }
+
+
+            // utile pour ouvrir la sidebar d'info
+            map.fire('ui:openInfoPanel', {
+              panelType: 'country',
+              payload: {
+                iso3,
+                name: feature?.properties?.name || 'Pays'
+              }
             })
           })
         },

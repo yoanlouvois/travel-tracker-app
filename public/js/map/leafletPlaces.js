@@ -159,7 +159,10 @@
           if (window.ToolManager?.getActiveTool() === "deletePlace") {
             removePlace(id)
           } else {
-            // plus tard: ouvrir page place / popup etc.
+            map.fire('ui:openInfoPanel', {
+              panelType: 'place',
+              payload: placesById.get(id)?.data
+            })
             console.log("Place clicked:", placesById.get(id)?.data)
           }
         }
