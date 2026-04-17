@@ -185,9 +185,14 @@
   }
 
 .map-wrap {
-    position: relative;
-    min-height: 0;
-  }
+  position: relative;
+  min-height: 0;
+  transition: padding-right 180ms ease;
+}
+
+.map-wrap.info-panel-open {
+  padding-right: 360px;
+}
   
   .map-toolbar {
     position: absolute;

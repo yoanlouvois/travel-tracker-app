@@ -14,6 +14,7 @@ const infoPanelContent = document.getElementById('infoPanelContent')
 // ===== Map init =====
 const map = L.map('map').setView([48.8566, 2.3522], 4)
 console.log("Leaflet OK, map initialisée")
+const mapWrap = document.querySelector('.map-wrap')
 
 L.tileLayer(
   'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png',
@@ -89,8 +90,14 @@ function openInfoPanel({ title = 'Infos', content = '' } = {}) {
   infoPanelTitle.textContent = title
   infoPanelContent.innerHTML = content || '<p class="text-secondary mb-0">Aucun contenu.</p>'
   infoPanel.classList.add('open')
+  mapWrap.classList.add('info-panel-open')
+
+  setTimeout(() => map.invalidateSize(), 200)
 }
 
 function closeInfoPanel() {
   infoPanel.classList.remove('open')
+  mapWrap.classList.remove('info-panel-open')
+
+  setTimeout(() => map.invalidateSize(), 200)
 }
