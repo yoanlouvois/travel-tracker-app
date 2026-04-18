@@ -168,12 +168,14 @@
 
               try {
                 await window.Api.updateCountry(country.id, {
-                  visited: nextVisited
+                  visited: nextVisited,
+                  toVisit: nextVisited ? false : country.toVisit
                 })
 
                 if (nextVisited) {
                   visitedCountries.add(iso3)
                   toVisitCountries.delete(iso3)
+                  country.toVisit = false
                 } else {
                   visitedCountries.delete(iso3)
                 }
@@ -189,15 +191,37 @@
 
             // MODE TO VISIT
             if (uiState.countryToVisitPickMode) {
-              if (!visitedCountries.has(iso3)) {
-                if (toVisitCountries.has(iso3)) {
-                  toVisitCountries.delete(iso3)
-                } else {
+              const country = countriesByIso3.get(iso3)
+              if (!country) {
+                console.warn('Pays introuvable en base pour iso3:', iso3)
+                return
+              }
+
+              // un pays visité ne peut pas être "à visiter"
+              if (visitedCountries.has(iso3)) {
+                return
+              }
+
+              const nextToVisit = !toVisitCountries.has(iso3)
+
+              try {
+                await window.Api.updateCountry(country.id, {
+                  toVisit: nextToVisit
+                })
+
+                if (nextToVisit) {
                   toVisitCountries.add(iso3)
+                } else {
+                  toVisitCountries.delete(iso3)
                 }
 
+                country.toVisit = nextToVisit
                 refreshCountriesStyle()
+              } catch (err) {
+                console.error('Erreur update country toVisit:', err)
               }
+
+              return
             }
 
             // utile pour leafletPlaces / autres modules
@@ -246,21 +270,27 @@
 
       countriesByIso3.clear()
       visitedCountries.clear()
+      toVisitCountries.clear()
 
       for (const country of countries) {
         const iso3 = window.IsoCodes?.iso2ToIso3?.(country.iso2)
         if (!iso3) continue
 
-        countriesByIso3.set(iso3.toUpperCase(), country)
+        const iso3Upper = iso3.toUpperCase()
+        countriesByIso3.set(iso3Upper, country)
 
         if (country.visited) {
-          visitedCountries.add(iso3.toUpperCase())
+          visitedCountries.add(iso3Upper)
+        }
+
+        if (country.toVisit) {
+          toVisitCountries.add(iso3Upper)
         }
       }
 
       refreshCountriesStyle()
     }
-    
+
     loadCountriesGeoJson()
       .then(() => loadCountriesFromApi())
       .catch(console.error)

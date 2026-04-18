@@ -28,7 +28,8 @@ async function main() {
       create: {
         iso2: iso2.toUpperCase(),
         name,
-        visited: false
+        visited: false,
+        toVisit: false
       }
     })
   }

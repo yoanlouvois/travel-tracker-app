@@ -30,6 +30,7 @@ model Country {
   name             String
   uiCoverImagePath String?
   visited          Boolean @default(false)
+  toVisit          Boolean @default(false)
 
   places           Place[]
   countryVlogs     CountryVlog[]

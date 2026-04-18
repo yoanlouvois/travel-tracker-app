@@ -35,7 +35,8 @@ async function create(data) {
       name: data.name,
       iso2: data.iso2.toUpperCase(),
       uiCoverImagePath: data.uiCoverImagePath ?? null,
-      visited: data.visited ?? false
+      visited: data.visited ?? false,
+      toVisit: data.toVisit ?? false
     }
   })
 }
@@ -52,7 +53,8 @@ async function update(id, data) {
       name: data.name,
       iso2: data.iso2 ? data.iso2.toUpperCase() : undefined,
       uiCoverImagePath: data.uiCoverImagePath,
-      visited: data.visited
+      visited: data.visited,
+      toVisit: data.toVisit
     }
   })
 }
