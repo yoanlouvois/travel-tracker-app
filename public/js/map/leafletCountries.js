@@ -6,6 +6,7 @@
     // =============================
     const visitedCountries = new Set() // ex: "FRA", "CAN", ...
     const toVisitCountries = new Set()
+    const countriesByIso3 = new Map()
 
     const uiState = {
       countryPickMode: false, // outil "pays visités" actif ?
@@ -151,20 +152,39 @@
             refreshCountriesStyle()
           })
 
-          layer.on('click', (e) => {
+          layer.on('click', async (e) => {
             const iso3 = String(getiso3(feature) || '').toUpperCase()
             if (!iso3 || iso3.length < 2) return
 
             // MODE VISITED
             if (uiState.countryPickMode) {
-              if (visitedCountries.has(iso3)) {
-                visitedCountries.delete(iso3)
-              } else {
-                visitedCountries.add(iso3)
-                toVisitCountries.delete(iso3)
+              const country = countriesByIso3.get(iso3)
+              if (!country) {
+                console.warn('Pays introuvable en base pour iso3:', iso3)
+                return
               }
 
-              refreshCountriesStyle()
+              const nextVisited = !visitedCountries.has(iso3)
+
+              try {
+                await window.Api.updateCountry(country.id, {
+                  visited: nextVisited
+                })
+
+                if (nextVisited) {
+                  visitedCountries.add(iso3)
+                  toVisitCountries.delete(iso3)
+                } else {
+                  visitedCountries.delete(iso3)
+                }
+
+                country.visited = nextVisited
+                refreshCountriesStyle()
+              } catch (err) {
+                console.error('Erreur update country visited:', err)
+              }
+
+              return
             }
 
             // MODE TO VISIT
@@ -187,7 +207,7 @@
             })
 
             const activeTool = window.ToolManager?.getActiveTool?.()
-            
+
             const blockInfoPanelTools = [
               'addVisited',
               'addToVisit',
@@ -221,7 +241,29 @@
       refreshCountriesStyle()
     }
 
-    loadCountriesGeoJson().catch(console.error)
+    async function loadCountriesFromApi() {
+      const countries = await window.Api.listCountries()
+
+      countriesByIso3.clear()
+      visitedCountries.clear()
+
+      for (const country of countries) {
+        const iso3 = window.IsoCodes?.iso2ToIso3?.(country.iso2)
+        if (!iso3) continue
+
+        countriesByIso3.set(iso3.toUpperCase(), country)
+
+        if (country.visited) {
+          visitedCountries.add(iso3.toUpperCase())
+        }
+      }
+
+      refreshCountriesStyle()
+    }
+    
+    loadCountriesGeoJson()
+      .then(() => loadCountriesFromApi())
+      .catch(console.error)
   }
 
   window.initVisitedCountriesMode = initVisitedCountriesMode

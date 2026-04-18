@@ -32,6 +32,13 @@
     })
   }
 
+  function updateCountry(id, data) {
+  return request(`/countries/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data)
+  })
+}
+
   // -------- Places --------
   function listPlaces() {
     return request('/places')
@@ -49,5 +56,6 @@
     createCountry,
     listPlaces,
     createPlace,
+    updateCountry,
   }
 })()
