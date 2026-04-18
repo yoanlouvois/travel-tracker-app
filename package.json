@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "seed:countries": "node scripts/seed-countries.js"
+  },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.4.1",
     "@prisma/client": "^7.4.1",
