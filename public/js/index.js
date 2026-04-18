@@ -76,6 +76,16 @@ map.on('ui:openInfoPanel', (e) => {
       `
     })
   }
+  
+  if (type === 'roadtrip') {
+    openInfoPanel({
+      title: data?.isBuilding ? 'Roadtrip en cours' : 'Roadtrip',
+      content: `
+        <p><strong>Étapes :</strong> ${data?.stepCount ?? 0}</p>
+        <p><strong>ID :</strong> ${data?.id ?? '-'}</p>
+      `
+    })
+  }
 })
 
 

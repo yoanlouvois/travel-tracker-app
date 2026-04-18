@@ -153,18 +153,31 @@
         markerCompact.__placeId = id
         markerDetailed.__placeId = id
   
-        // Interaction click marker (suppression si outil delete)
-        function onMarkerClick() {
-          map.fire("place:click", { placeId: id })
-          if (window.ToolManager?.getActiveTool() === "deletePlace") {
-            removePlace(id)
-          } else {
-            map.fire('ui:openInfoPanel', {
-              panelType: 'place',
-              payload: placesById.get(id)?.data
-            })
-            console.log("Place clicked:", placesById.get(id)?.data)
+        // Interaction click marker
+        function onMarkerClick(e) {
+          if (e) {
+            L.DomEvent.stopPropagation(e)
           }
+
+          const activeTool = window.ToolManager?.getActiveTool?.()
+
+          map.fire("place:click", { placeId: id })
+
+          if (activeTool === "addRoadtrip") {
+            return
+          }
+
+          if (activeTool === "deletePlace") {
+            removePlace(id)
+            return
+          }
+
+          map.fire('ui:openInfoPanel', {
+            panelType: 'place',
+            payload: placesById.get(id)?.data
+          })
+
+          console.log("Place clicked:", placesById.get(id)?.data)
         }
   
         markerCompact.on("click", onMarkerClick)

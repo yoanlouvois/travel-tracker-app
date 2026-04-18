@@ -61,9 +61,19 @@
         // suppression du roadtrip via outil delete
         buildingPolyline.on("click", () => {
           if (window.ToolManager?.getActiveTool?.() === TOOL_DELETE) {
-            // si on clique la ligne en cours, on annule la création
             cancelBuilding()
+            return
           }
+
+          map.fire('ui:openInfoPanel', {
+            panelType: 'roadtrip',
+            payload: {
+              id: buildingId,
+              stepCount: buildingStepIds.length,
+              stepPlaceIds: buildingStepIds.slice(),
+              isBuilding: true
+            }
+          })
         })
   
         layerRoadtripLines.addLayer(buildingPolyline)
@@ -103,7 +113,11 @@
         polyline.on("click", () => {
           if (window.ToolManager?.getActiveTool?.() === TOOL_DELETE) {
             removeRoadtrip(id)
+            return
           }
+
+          const rt = roadtripsById.get(id)
+          openRoadtripInfo(rt)
         })
   
         roadtripsById.set(id, { id, stepPlaceIds, polyline })
@@ -257,6 +271,19 @@
         // on laisse l'outil actif => on peut en créer un autre directement
         startBuilding()
       })
+
+      function openRoadtripInfo(rt) {
+        if (!rt) return
+
+        map.fire('ui:openInfoPanel', {
+          panelType: 'roadtrip',
+          payload: {
+            id: rt.id,
+            stepCount: rt.stepPlaceIds.length,
+            stepPlaceIds: rt.stepPlaceIds
+          }
+        })
+      }
   
       // expose debug
       return { roadtripsById, removeRoadtrip }
