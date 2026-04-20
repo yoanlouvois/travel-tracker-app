@@ -18,9 +18,15 @@ It enables marking countries as visited or to visit, adding custom places, and c
 - Backend persistence using a database
 
 ---
+
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/2ea18257-d25c-4e40-a4d7-6f54d210378b" width="45%" />
-  <img src="https://github.com/user-attachments/assets/219604cd-bbb5-4e47-a98a-f1d6ca661918" width="45%" />
+  <img src="https://github.com/user-attachments/assets/2ea18257-d25c-4e40-a4d7-6f54d210378b" width="80%" />
+</p>
+
+<br>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/219604cd-bbb5-4e47-a98a-f1d6ca661918" width="80%" />
 </p>
 
 ---
