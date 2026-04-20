@@ -49,22 +49,30 @@ It enables marking countries as visited or to visit, adding custom places, and c
 
 ### 1. Clone the repository
 
+```bash
 git clone <your-repo-url>  
 cd WorldTracker
+```
 
 ### 2. Install dependencies
 
-`npm install`
+```bash
+npm install
+```
 
 ### 3. Setup the database
 
-`npx prisma generate`
-`npx prisma migrate dev` 
-`npm run seed:countries`
+```bash
+npx prisma generate
+npx prisma migrate dev 
+npm run seed:countries
+```
 
 ### 4. Start the server
 
-`npm start`
+```bash
+npm start
+```
 
 Then open your browser at:
 
