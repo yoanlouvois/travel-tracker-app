@@ -48,18 +48,18 @@ cd WorldTracker
 
 ### 2. Install dependencies
 
-npm install
+`npm install`
 
 ### 3. Setup the database
 
-npx prisma generate  
-npx prisma migrate dev  
-npm run seed:countries
+`npx prisma generate`
+`npx prisma migrate dev` 
+`npm run seed:countries`
 
 ### 4. Start the server
 
-npm start
+`npm start`
 
 Then open your browser at:
 
-http://localhost:8080
+`http://localhost:8080`
