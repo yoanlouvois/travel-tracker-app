@@ -387,10 +387,12 @@
     // =============================
     // INIT
     // =============================
-    loadPlaces().catch((err) => console.error("Erreur chargement lieux:", err))
+    // promesse résolue quand les lieux sont affichés (utilisée par leafletRoadtrips)
+    const placesReady = loadPlaces().catch((err) => console.error("Erreur chargement lieux:", err))
 
     const publicApi = {
       placesById,
+      ready: placesReady,
       createPlace,
       updatePlace,
       deletePlace,

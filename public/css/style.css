@@ -191,7 +191,7 @@
 }
 
 .map-wrap.info-panel-open {
-  padding-right: 360px;
+  padding-right: var(--panel-width); /* même largeur que .info-panel */
 }
   
   .map-toolbar {
@@ -328,7 +328,7 @@
     position: absolute;
     top: 0;
     right: 0;
-    width: 400px;
+    width: var(--panel-width);
     height: 100%;
     background: #1A1A1A;
     border-left: 1px solid rgba(255,255,255,0.08);
@@ -383,3 +383,459 @@
     flex: 1;
     overflow-y: auto;
   }
+
+/* =========================
+   INFO PANEL : CONTENU
+   Cible les balises + attributs data-* de public/panels/*.html
+   (aucune classe à ajouter dans le HTML).
+========================= */
+
+:root{
+  --panel-width: 400px;
+  --surface-1: #222222;
+  --surface-2: #2a2a2a;
+  --surface-3: #3a3a3a;
+  --border-strong: rgba(255,255,255,0.15);
+  --accent: #4caf50;
+  --accent-soft: rgba(76,175,80,0.15);
+  --danger-soft: rgba(224,90,90,0.12);
+  --visited: #1f5a3a;   /* mêmes couleurs que les pays sur la carte */
+  --to-visit: #5a1f1f;
+  --roadtrip: rgba(120,200,160,0.95);
+}
+
+/* ----- Titre du panneau ----- */
+.info-panel-header{
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.info-panel-title{
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.05rem;
+}
+
+/* ----- Conteneur ----- */
+.info-panel-content{
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-right: 4px; /* place pour la scrollbar */
+  font-size: 0.9rem;
+  line-height: 1.45;
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-3) transparent;
+}
+
+/* [hidden] doit gagner sur les display: flex/grid ci-dessous */
+.info-panel-content [hidden]{
+  display: none !important;
+}
+
+.info-panel-content p{
+  margin: 0;
+}
+
+.info-panel-content p strong{
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* blocs principaux : formulaire et sections */
+.info-panel-content form,
+.info-panel-content section{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* séparateur entre deux blocs (ex : formulaire / photos / étapes) */
+.info-panel-content > * + section{
+  padding-top: 14px;
+  border-top: 1px solid var(--border-soft);
+}
+
+/* ----- Titres de section ----- */
+.info-panel-content h6,
+.info-panel-content legend{
+  margin: 0;
+  padding: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+
+/* ----- Image de couverture (pays) ----- */
+.info-panel-content [data-cover]{
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+}
+
+/* =========================
+   STATUT (boutons radio en "segmented control")
+   pays : none / toVisit / visited — lieu : false / true
+========================= */
+.info-panel-content fieldset{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+/* la legend passe sur sa propre ligne */
+.info-panel-content fieldset legend{
+  float: left;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.info-panel-content fieldset label{
+  position: relative;
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: #ccc;
+  font-size: 0.85rem;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.info-panel-content fieldset label:hover{
+  background: var(--surface-3);
+  color: #fff;
+}
+
+/* le radio reste accessible au clavier mais invisible */
+.info-panel-content fieldset input[type="radio"]{
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.info-panel-content fieldset label:has(input:focus-visible){
+  outline: 2px solid rgba(255,255,255,0.5);
+  outline-offset: 2px;
+}
+
+/* sélection : neutre par défaut */
+.info-panel-content fieldset label:has(input:checked){
+  background: var(--surface-3);
+  border-color: rgba(255,255,255,0.35);
+  color: #fff;
+}
+
+/* visité = vert, à visiter = rouge (comme sur la carte) */
+.info-panel-content fieldset label:has(input[value="visited"]:checked),
+.info-panel-content fieldset label:has(input[name="visited"][value="true"]:checked){
+  background: var(--visited);
+  border-color: var(--accent);
+}
+
+.info-panel-content fieldset label:has(input[value="toVisit"]:checked),
+.info-panel-content fieldset label:has(input[name="visited"][value="false"]:checked){
+  background: var(--to-visit);
+  border-color: rgba(255,80,80,0.5);
+}
+
+.info-panel-content fieldset:disabled label{
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =========================
+   FORMULAIRES (lieu, roadtrip)
+========================= */
+.info-panel-content form > label{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+}
+
+.info-panel-content input[type="text"],
+.info-panel-content input[type="date"],
+.info-panel-content select,
+.info-panel-content textarea{
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: #1f1f1f;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  color-scheme: dark; /* calendrier et liste déroulante en sombre */
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.info-panel-content textarea{
+  min-height: 80px;
+  resize: vertical;
+}
+
+.info-panel-content input:focus,
+.info-panel-content select:focus,
+.info-panel-content textarea:focus{
+  outline: none;
+  border-color: rgba(255,255,255,0.3);
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.06);
+}
+
+.info-panel-content input:disabled,
+.info-panel-content select:disabled,
+.info-panel-content textarea:disabled{
+  opacity: 0.6;
+}
+
+/* =========================
+   BOUTONS
+========================= */
+.info-panel-content button,
+.info-panel-content [data-page-link]{
+  align-self: flex-start;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.85rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.info-panel-content button:hover:not(:disabled),
+.info-panel-content [data-page-link]:hover{
+  background: var(--surface-3);
+  border-color: rgba(255,255,255,0.3);
+  color: #fff;
+}
+
+.info-panel-content button:disabled{
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* principal : enregistrer / terminer */
+.info-panel-content button[type="submit"],
+.info-panel-content [data-roadtrip-finish]{
+  background: #444;
+  border-color: #555;
+}
+
+.info-panel-content button[type="submit"]:hover:not(:disabled),
+.info-panel-content [data-roadtrip-finish]:hover:not(:disabled){
+  background: #555;
+}
+
+/* suppression (même style que l'outil poubelle) */
+.info-panel-content [data-place-delete],
+.info-panel-content [data-roadtrip-delete]{
+  margin-top: 4px;
+  background: #3a1f1f;
+  border-color: rgba(255,80,80,0.4);
+  color: #f3b4b4;
+}
+
+.info-panel-content [data-place-delete]:hover:not(:disabled),
+.info-panel-content [data-roadtrip-delete]:hover:not(:disabled){
+  background: #5a2a2a;
+  border-color: rgba(255,100,100,0.7);
+  color: #fff;
+}
+
+/* =========================
+   MESSAGES
+========================= */
+.info-panel-content [data-place-error],
+.info-panel-content [data-roadtrip-error],
+.info-panel-content [data-roadtrip-building-error],
+.info-panel-content [data-country-status-error]{
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(224,90,90,0.35);
+  background: var(--danger-soft);
+  color: #f3b4b4;
+  font-size: 0.85rem;
+}
+
+.info-panel-content [data-place-saved],
+.info-panel-content [data-roadtrip-saved]{
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(76,175,80,0.35);
+  background: var(--accent-soft);
+  color: #a5d6a7;
+  font-size: 0.85rem;
+}
+
+.info-panel-content [data-empty]{
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* =========================
+   LISTES
+========================= */
+
+/* stats par type (pays) : pastilles */
+.info-panel-content [data-list="stats"]{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.info-panel-content [data-list="stats"] li{
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: #ccc;
+  font-size: 0.78rem;
+}
+
+/* lignes cliquables : lieux d'un pays, étapes d'un roadtrip */
+.info-panel-content [data-list="places"],
+.info-panel-content [data-list="steps"],
+.info-panel-content [data-list="buildingSteps"]{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.info-panel-content [data-list="places"] li,
+.info-panel-content [data-list="steps"] li,
+.info-panel-content [data-list="buildingSteps"] li{
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-1);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.info-panel-content li[role="button"]{
+  cursor: pointer;
+}
+
+.info-panel-content li[role="button"]:hover{
+  background: var(--surface-2);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.info-panel-content li[role="button"]:focus-visible{
+  outline: 2px solid rgba(255,255,255,0.5);
+  outline-offset: 1px;
+}
+
+.info-panel-content li [data-field="type"],
+.info-panel-content li [data-field="note"]{
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+/* étapes numérotées, couleur des tracés de roadtrip */
+.info-panel-content [data-list="steps"],
+.info-panel-content [data-list="buildingSteps"]{
+  counter-reset: step;
+}
+
+.info-panel-content [data-list="steps"] li,
+.info-panel-content [data-list="buildingSteps"] li{
+  counter-increment: step;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.info-panel-content [data-list="steps"] li::before,
+.info-panel-content [data-list="buildingSteps"] li::before{
+  content: counter(step);
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(120,200,160,0.4);
+  background: rgba(120,200,160,0.12);
+  color: var(--roadtrip);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* photos / vidéos d'un lieu : grille 2 colonnes */
+.info-panel-content [data-list="media"]{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.info-panel-content [data-list="media"] li{
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-panel-content [data-list="media"] img,
+.info-panel-content [data-list="media"] video{
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border-soft);
+  background: #111;
+}
+
+.info-panel-content [data-list="media"] [data-field="caption"]{
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+/* =========================
+   PETITS ÉCRANS : panneau plein largeur
+========================= */
+@media (max-width: 600px){
+  :root{
+    --panel-width: 100%;
+  }
+
+  .map-wrap.info-panel-open{
+    padding-right: 0;
+  }
+}

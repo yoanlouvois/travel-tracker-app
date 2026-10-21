@@ -244,12 +244,62 @@
     // =============================
     // RENDU : ROADTRIP
     // =============================
+    const BUILDING_KEY = '__building__' // clé du panneau "roadtrip en cours"
+
+    function fillSteps(root, listName, steps) {
+      fillList(root, listName, 'step', steps, (node, step) => {
+        if (step.lat != null && step.lng != null) {
+          node.dataset.stepLat = step.lat
+          node.dataset.stepLng = step.lng
+        }
+        setField(node, 'title', step.title || 'Étape')
+        setField(node, 'note', step.linked ? '' : '· point libre')
+      })
+    }
+
     function renderRoadtripPanel(data = {}) {
       const root = clonePanel('roadtrip')
       if (!root) return null
 
-      setField(root, 'stepCount', data.stepCount ?? 0)
-      setField(root, 'id', data.id ?? '-')
+      const steps = data.steps || []
+      setField(root, 'stepCount', data.stepCount ?? steps.length)
+
+      // --- en cours de création ---
+      if (data.isBuilding) {
+        const section = root.querySelector('[data-roadtrip-building]')
+        if (section) section.hidden = false
+        fillSteps(root, 'buildingSteps', steps)
+
+        const finish = root.querySelector('[data-roadtrip-finish]')
+        if (finish) finish.disabled = steps.length < 2
+        return root
+      }
+
+      // --- enregistré ---
+      const form = root.querySelector('[data-roadtrip-form]')
+      if (form) {
+        form.hidden = false
+        form.dataset.tripId = data.id || ''
+
+        const name = formField(form, 'name')
+        if (name) name.value = data.name || ''
+
+        const description = formField(form, 'description')
+        if (description) description.value = data.description || ''
+
+        const startDate = formField(form, 'startDate')
+        if (startDate) startDate.value = data.startDate ? String(data.startDate).slice(0, 10) : ''
+
+        const endDate = formField(form, 'endDate')
+        if (endDate) endDate.value = data.endDate ? String(data.endDate).slice(0, 10) : ''
+      }
+
+      const stepsSection = root.querySelector('[data-roadtrip-steps]')
+      if (stepsSection) stepsSection.hidden = false
+      fillSteps(root, 'steps', steps)
+
+      const del = root.querySelector('[data-roadtrip-delete]')
+      if (del) del.dataset.tripId = data.id || ''
 
       return root
     }
@@ -259,8 +309,8 @@
       place: { render: renderPlacePanel, title: (d) => d?.label || 'Lieu', key: (d) => d?.id },
       roadtrip: {
         render: renderRoadtripPanel,
-        title: (d) => (d?.isBuilding ? 'Roadtrip en cours' : 'Roadtrip'),
-        key: (d) => d?.id,
+        title: (d) => (d?.isBuilding ? 'Roadtrip en cours' : d?.name || 'Roadtrip'),
+        key: (d) => (d?.isBuilding ? BUILDING_KEY : d?.id),
       },
     }
 
@@ -351,6 +401,35 @@
       if (!isShowing('country')) return
       const payload = window.CountriesApi?.buildCountryPanelPayload?.(currentPanel.key)
       if (payload) show('country', payload)
+    })
+
+    // --- roadtrips ---
+
+    // brouillon modifié : on l'affiche (payload null = brouillon annulé)
+    map.on('roadtrip:building', ({ payload }) => {
+      if (!payload) {
+        if (isShowing('roadtrip', BUILDING_KEY)) close()
+        return
+      }
+      // n'écrase pas un autre panneau ouvert (sauf le brouillon lui-même)
+      if (!infoPanel.classList.contains('open') || isShowing('roadtrip', BUILDING_KEY)) {
+        show('roadtrip', payload)
+      }
+    })
+
+    // brouillon enregistré : on passe sur le roadtrip créé (pour le renommer)
+    map.on('roadtrip:created', ({ payload }) => {
+      if (payload && (!infoPanel.classList.contains('open') || isShowing('roadtrip', BUILDING_KEY))) {
+        show('roadtrip', payload)
+      }
+    })
+
+    map.on('roadtrip:updated', ({ id, payload }) => {
+      if (payload && isShowing('roadtrip', id)) show('roadtrip', payload)
+    })
+
+    map.on('roadtrip:removed', ({ id }) => {
+      if (isShowing('roadtrip', id)) close()
     })
 
     // =============================
@@ -488,6 +567,121 @@
       if (!item) return
       e.preventDefault()
       openPlaceFromList(item)
+    })
+
+    // =============================
+    // INTERACTIONS : ROADTRIPS
+    // =============================
+
+    // enregistrer nom / description / dates
+    infoPanelContent.addEventListener('submit', async (e) => {
+      const form = e.target.closest('[data-roadtrip-form]')
+      if (!form) return
+      e.preventDefault()
+
+      const id = form.dataset.tripId
+      const errorEl = form.querySelector('[data-roadtrip-error]')
+      showMessage(errorEl, null)
+      showMessage(form.querySelector('[data-roadtrip-saved]'), null)
+
+      const fd = new FormData(form)
+      const name = String(fd.get('name') || '').trim()
+      const startDate = fd.get('startDate') || null
+      const endDate = fd.get('endDate') || null
+
+      if (!name) {
+        showMessage(errorEl, 'Le nom est obligatoire.')
+        return
+      }
+      if (startDate && endDate && endDate < startDate) {
+        showMessage(errorEl, 'La date de fin est avant la date de début.')
+        return
+      }
+
+      setFormBusy(form, true)
+      const entry = await window.RoadtripsApi?.updateTrip?.(id, {
+        name,
+        description: String(fd.get('description') || '').trim() || null,
+        startDate,
+        endDate,
+      })
+
+      if (!entry) {
+        setFormBusy(form, false)
+        showMessage(errorEl, "Impossible d'enregistrer les modifications. Réessaie.")
+        return
+      }
+
+      const shown = await show('roadtrip', window.RoadtripsApi.buildPanelPayload(id))
+      if (shown) {
+        showMessage(infoPanelContent.querySelector('[data-roadtrip-saved]'), 'Modifications enregistrées.')
+      }
+    })
+
+    // centrer la carte sur une étape
+    function flyToStep(item) {
+      const lat = Number(item.dataset.stepLat)
+      const lng = Number(item.dataset.stepLng)
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return
+      map.flyTo([lat, lng], Math.max(map.getZoom(), 8))
+    }
+
+    infoPanelContent.addEventListener('click', async (e) => {
+      // terminer le brouillon
+      const finishBtn = e.target.closest('[data-roadtrip-finish]')
+      if (finishBtn) {
+        finishBtn.disabled = true
+        const created = await window.RoadtripsApi?.finishBuilding?.()
+        if (!created && window.RoadtripsApi?.getBuildingPayload?.()) {
+          // échec : le brouillon est toujours là
+          finishBtn.disabled = false
+          showMessage(
+            infoPanelContent.querySelector('[data-roadtrip-building-error]'),
+            "Impossible d'enregistrer le roadtrip. Réessaie."
+          )
+        }
+        return
+      }
+
+      // annuler le brouillon
+      if (e.target.closest('[data-roadtrip-cancel]')) {
+        window.RoadtripsApi?.cancelBuilding?.()
+        return
+      }
+
+      // supprimer un roadtrip
+      const delBtn = e.target.closest('[data-roadtrip-delete]')
+      if (delBtn) {
+        const id = delBtn.dataset.tripId
+        const payload = window.RoadtripsApi?.buildPanelPayload?.(id)
+        if (!payload) return
+
+        const ok = window.confirm(
+          `Supprimer « ${payload.name} » ?\nLes lieux de ses étapes sont conservés.`
+        )
+        if (!ok) return
+
+        delBtn.disabled = true
+        const deleted = await window.RoadtripsApi.deleteTrip(id)
+        if (!deleted) {
+          delBtn.disabled = false
+          showMessage(infoPanelContent.querySelector('[data-roadtrip-error]'), 'Impossible de supprimer ce roadtrip. Réessaie.')
+        }
+        // en cas de succès, 'roadtrip:removed' ferme le panneau
+        return
+      }
+
+      // clic sur une étape
+      const step = e.target.closest('li[data-step-lat]')
+      if (step) flyToStep(step)
+    })
+
+    infoPanelContent.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return
+      const step = e.target.closest('li[data-step-lat]')
+      if (!step) return
+      e.preventDefault()
+      flyToStep(step)
     })
 
     // =============================
