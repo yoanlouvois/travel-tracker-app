@@ -1,0 +1,60 @@
+<!-- public/panels/place.html : contenu du panneau d'info d'un lieu -->
+
+<form data-place-form>
+  <label>
+    Nom
+    <input type="text" name="name" required maxlength="200">
+  </label>
+
+  <label>
+    Type
+    <select name="type">
+      <option value="DEFAULT">Lieu</option>
+      <option value="CITY">Ville</option>
+      <option value="HIKE">Randonnée</option>
+      <option value="ACTIVITY">Activité</option>
+      <option value="VIEWPOINT">Point de vue</option>
+    </select>
+  </label>
+
+  <fieldset>
+    <legend>Statut</legend>
+    <label><input type="radio" name="visited" value="false"> À visiter</label>
+    <label><input type="radio" name="visited" value="true"> Visité</label>
+  </fieldset>
+
+  <label data-visited-at-field hidden>
+    Date de visite
+    <input type="date" name="visitedAt">
+  </label>
+
+  <label>
+    Description
+    <textarea name="description" rows="4"></textarea>
+  </label>
+
+  <p><strong>Pays :</strong> <span data-field="country"></span></p>
+  <p><strong>Coordonnées :</strong> <span data-field="coords"></span></p>
+
+  <p data-place-error hidden></p>
+  <p data-place-saved hidden>Modifications enregistrées.</p>
+
+  <button type="submit">Enregistrer</button>
+</form>
+
+<section>
+  <h6>Photos</h6>
+  <ul data-list="media"></ul>
+  <p data-empty="media" hidden>Aucune photo.</p>
+</section>
+
+<button type="button" data-place-delete>Supprimer ce lieu</button>
+
+<!-- modèle d'un média -->
+<template data-item="media">
+  <li>
+    <img data-media-img alt="" hidden>
+    <video data-media-video controls hidden></video>
+    <span data-field="caption"></span>
+  </li>
+</template>

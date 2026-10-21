@@ -1,0 +1,56 @@
+<!-- public/panels/roadtrip.html : contenu du panneau d'info d'un roadtrip -->
+
+<!-- Roadtrip en cours de création -->
+<section data-roadtrip-building hidden>
+  <p>
+    Clique sur des lieux ou sur la carte pour ajouter des étapes.
+    Double-clic pour terminer, Échap pour annuler.
+  </p>
+  <p><strong>Étapes :</strong> <span data-field="stepCount"></span></p>
+  <ol data-list="buildingSteps"></ol>
+  <p data-roadtrip-building-error hidden></p>
+  <button type="button" data-roadtrip-finish>Terminer le roadtrip</button>
+  <button type="button" data-roadtrip-cancel>Annuler</button>
+</section>
+
+<!-- Roadtrip enregistré -->
+<form data-roadtrip-form hidden>
+  <label>
+    Nom
+    <input type="text" name="name" required maxlength="200">
+  </label>
+
+  <label>
+    Description
+    <textarea name="description" rows="3"></textarea>
+  </label>
+
+  <label>
+    Début
+    <input type="date" name="startDate">
+  </label>
+
+  <label>
+    Fin
+    <input type="date" name="endDate">
+  </label>
+
+  <p data-roadtrip-error hidden></p>
+  <p data-roadtrip-saved hidden>Modifications enregistrées.</p>
+
+  <button type="submit">Enregistrer</button>
+</form>
+
+<section data-roadtrip-steps hidden>
+  <h6>Étapes (<span data-field="stepCount"></span>)</h6>
+  <ol data-list="steps"></ol>
+  <button type="button" data-roadtrip-delete>Supprimer ce roadtrip</button>
+</section>
+
+<!-- modèle d'une étape -->
+<template data-item="step">
+  <li role="button" tabindex="0">
+    <span data-field="title"></span>
+    <span data-field="note"></span>
+  </li>
+</template>

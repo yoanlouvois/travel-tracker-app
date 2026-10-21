@@ -6,7 +6,8 @@
     // =============================
     const visitedCountries = new Set() // ex: "FRA", "CAN", ...
     const toVisitCountries = new Set()
-    const countriesByIso3 = new Map()
+    const countriesByIso3 = new Map()  // iso3 -> country (base)
+    const featuresByIso3 = new Map()   // iso3 -> feature GeoJSON (pour le nom de secours)
 
     const uiState = {
       countryPickMode: false, // outil "pays visités" actif ?
@@ -72,6 +73,85 @@
     }
 
     // =============================
+    // STATUT D'UN PAYS
+    // =============================
+    // 3 statuts possibles : 'visited' | 'toVisit' | 'none'
+    function getCountryStatus(iso3) {
+      if (visitedCountries.has(iso3)) return 'visited'
+      if (toVisitCountries.has(iso3)) return 'toVisit'
+      return 'none'
+    }
+
+    // Données envoyées au panneau d'info
+    function buildCountryPanelPayload(iso3) {
+      const country = countriesByIso3.get(iso3) || null
+      const feature = featuresByIso3.get(iso3)
+
+      // lieux du pays, déjà chargés par leafletPlaces.js
+      const places = country && window.PlacesApi
+        ? [...window.PlacesApi.placesById.values()]
+            .map((entry) => entry.data)
+            .filter((place) => place.countryId === country.id)
+        : []
+
+      const placesByType = {}
+      for (const place of places) {
+        placesByType[place.type] = (placesByType[place.type] || 0) + 1
+      }
+
+      return {
+        id: country?.id ?? null,
+        iso3,
+        iso2: country?.iso2 ?? null,
+        name: country?.name || feature?.properties?.name || 'Pays',
+        status: getCountryStatus(iso3),
+        visited: visitedCountries.has(iso3),
+        toVisit: toVisitCountries.has(iso3),
+        coverImagePath: country?.uiCoverImagePath ?? null,
+        places,
+        stats: {
+          placesCount: places.length,
+          visitedPlacesCount: places.filter((p) => p.visited).length,
+          placesByType, // ex: { CITY: 3, HIKE: 1, VISITED: 2 }
+        },
+      }
+    }
+
+    // Change le statut d'un pays : API d'abord, puis état front + carte + panneau.
+    // Lève une erreur si le pays est inconnu ou si l'API échoue.
+    async function setCountryStatus(iso3, status) {
+      iso3 = String(iso3 || '').toUpperCase()
+
+      if (!['visited', 'toVisit', 'none'].includes(status)) {
+        throw new Error(`Statut invalide: ${status}`)
+      }
+
+      const country = countriesByIso3.get(iso3)
+      if (!country) throw new Error(`Pays introuvable en base pour iso3: ${iso3}`)
+
+      const data = {
+        visited: status === 'visited',
+        toVisit: status === 'toVisit',
+      }
+
+      await window.Api.updateCountry(country.id, data)
+
+      country.visited = data.visited
+      country.toVisit = data.toVisit
+
+      if (data.visited) visitedCountries.add(iso3)
+      else visitedCountries.delete(iso3)
+
+      if (data.toVisit) toVisitCountries.add(iso3)
+      else toVisitCountries.delete(iso3)
+
+      refreshCountriesStyle()
+      map.fire('country:updated', { iso3, payload: buildCountryPanelPayload(iso3) })
+
+      return country
+    }
+
+    // =============================
     // TOOL MANAGER (1 seul outil actif)
     // =============================
     if (!window.ToolManager || typeof window.ToolManager.onChange !== 'function') {
@@ -81,11 +161,14 @@
         uiState.countryPickMode = activeTool === TOOL_VISITED
         uiState.countryToVisitPickMode = activeTool === TOOL_TOVISIT
 
-        toolCountries.classList.toggle('active', uiState.countryPickMode)
-        toolCountriesFutur.classList.toggle('active', uiState.countryToVisitPickMode)
+        toolCountries?.classList.toggle('active', uiState.countryPickMode)
+        toolCountriesFutur?.classList.toggle('active', uiState.countryToVisitPickMode)
 
-        map.getContainer().style.cursor =
-          (uiState.countryPickMode || uiState.countryToVisitPickMode) ? 'pointer' : ''
+        if (uiState.countryPickMode || uiState.countryToVisitPickMode) {
+          map.getContainer().style.cursor = 'pointer'
+        } else if (!activeTool) {
+          map.getContainer().style.cursor = ''
+        }
 
         refreshCountriesStyle()
       })
@@ -144,6 +227,9 @@
       countriesLayer = L.geoJSON(geojson, {
         style: countryStyle,
         onEachFeature: (feature, layer) => {
+          const featureIso3 = String(getiso3(feature) || '').toUpperCase()
+          if (featureIso3) featuresByIso3.set(featureIso3, feature)
+
           layer.on('mouseover', () => {
             layer.setStyle({ weight: 2, color: 'rgba(255,255,255,0.35)' })
           })
@@ -153,74 +239,31 @@
           })
 
           layer.on('click', async (e) => {
-            const iso3 = String(getiso3(feature) || '').toUpperCase()
+            const iso3 = featureIso3
             if (!iso3 || iso3.length < 2) return
 
-            // MODE VISITED
+            // MODE VISITED : bascule visité <-> pas visité
             if (uiState.countryPickMode) {
-              const country = countriesByIso3.get(iso3)
-              if (!country) {
-                console.warn('Pays introuvable en base pour iso3:', iso3)
-                return
-              }
-
-              const nextVisited = !visitedCountries.has(iso3)
-
+              const next = visitedCountries.has(iso3) ? 'none' : 'visited'
               try {
-                await window.Api.updateCountry(country.id, {
-                  visited: nextVisited,
-                  toVisit: nextVisited ? false : country.toVisit
-                })
-
-                if (nextVisited) {
-                  visitedCountries.add(iso3)
-                  toVisitCountries.delete(iso3)
-                  country.toVisit = false
-                } else {
-                  visitedCountries.delete(iso3)
-                }
-
-                country.visited = nextVisited
-                refreshCountriesStyle()
+                await setCountryStatus(iso3, next)
               } catch (err) {
                 console.error('Erreur update country visited:', err)
               }
-
               return
             }
 
-            // MODE TO VISIT
+            // MODE TO VISIT : bascule à visiter <-> pas visité
             if (uiState.countryToVisitPickMode) {
-              const country = countriesByIso3.get(iso3)
-              if (!country) {
-                console.warn('Pays introuvable en base pour iso3:', iso3)
-                return
-              }
+              // un pays visité ne peut pas être "à visiter" via cet outil
+              if (visitedCountries.has(iso3)) return
 
-              // un pays visité ne peut pas être "à visiter"
-              if (visitedCountries.has(iso3)) {
-                return
-              }
-
-              const nextToVisit = !toVisitCountries.has(iso3)
-
+              const next = toVisitCountries.has(iso3) ? 'none' : 'toVisit'
               try {
-                await window.Api.updateCountry(country.id, {
-                  toVisit: nextToVisit
-                })
-
-                if (nextToVisit) {
-                  toVisitCountries.add(iso3)
-                } else {
-                  toVisitCountries.delete(iso3)
-                }
-
-                country.toVisit = nextToVisit
-                refreshCountriesStyle()
+                await setCountryStatus(iso3, next)
               } catch (err) {
                 console.error('Erreur update country toVisit:', err)
               }
-
               return
             }
 
@@ -241,22 +284,14 @@
               'addViewpoint',
               'addRoadtrip',
               'deletePlace',
-              'countriesVisited',
-              'countriesToVisit'
             ]
 
-            if (blockInfoPanelTools.includes(activeTool)) {
-              return
-            }
+            if (blockInfoPanelTools.includes(activeTool)) return
 
-
-            // utile pour ouvrir la sidebar d'info
+            // ouvre la sidebar d'info
             map.fire('ui:openInfoPanel', {
               panelType: 'country',
-              payload: {
-                iso3,
-                name: feature?.properties?.name || 'Pays'
-              }
+              payload: buildCountryPanelPayload(iso3)
             })
           })
         },
@@ -279,13 +314,8 @@
         const iso3Upper = iso3.toUpperCase()
         countriesByIso3.set(iso3Upper, country)
 
-        if (country.visited) {
-          visitedCountries.add(iso3Upper)
-        }
-
-        if (country.toVisit) {
-          toVisitCountries.add(iso3Upper)
-        }
+        if (country.visited) visitedCountries.add(iso3Upper)
+        if (country.toVisit) toVisitCountries.add(iso3Upper)
       }
 
       refreshCountriesStyle()
@@ -294,6 +324,15 @@
     loadCountriesGeoJson()
       .then(() => loadCountriesFromApi())
       .catch(console.error)
+
+    // =============================
+    // API PUBLIQUE (utilisée par index.js / panneau d'info)
+    // =============================
+    window.CountriesApi = {
+      getCountryStatus,
+      setCountryStatus,
+      buildCountryPanelPayload,
+    }
   }
 
   window.initVisitedCountriesMode = initVisitedCountriesMode

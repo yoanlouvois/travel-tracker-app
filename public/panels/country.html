@@ -1,0 +1,36 @@
+<!-- public/panels/country.html : contenu du panneau d'info d'un pays -->
+
+<img data-cover alt="" hidden>
+
+<fieldset data-country-status>
+  <legend>Statut</legend>
+  <label><input type="radio" name="countryStatus" value="none"> Pas visité</label>
+  <label><input type="radio" name="countryStatus" value="toVisit"> À visiter</label>
+  <label><input type="radio" name="countryStatus" value="visited"> Visité</label>
+</fieldset>
+<p data-country-status-error hidden></p>
+
+<p><strong>Code :</strong> <span data-field="iso2"></span> / <span data-field="iso3"></span></p>
+<p>
+  <strong>Lieux :</strong> <span data-field="placesCount"></span>
+  (<span data-field="visitedPlacesCount"></span> visités)
+</p>
+
+<ul data-list="stats"></ul>
+
+<h6>Lieux enregistrés</h6>
+<ul data-list="places"></ul>
+<p data-empty="places" hidden>Aucun lieu enregistré.</p>
+
+<a data-page-link hidden>Voir la page du pays</a>
+
+<!-- modèles des éléments de liste -->
+<template data-item="stat">
+  <li><span data-field="label"></span> : <span data-field="count"></span></li>
+</template>
+
+<template data-item="place">
+  <li role="button" tabindex="0">
+    <span data-field="label"></span> · <span data-field="type"></span>
+  </li>
+</template>
