@@ -1,0 +1,48 @@
+<!-- public/partials/header.html : en-tête partagé, injecté par js/common.js
+     dans <header id="appHeader" class="app-header" data-page="..."></header>
+     data-page : map | countries | places | roadtrips | vlogs -->
+
+<div class="header-inner">
+
+  <!-- Gauche : Menu sur la carte, retour à la carte sur les autres pages -->
+  <div class="header-left">
+    <button id="btnMenu" class="btn btn-header" type="button" aria-label="Menu" title="Menu" data-header-map-only>
+      <i class="bi bi-list" aria-hidden="true"></i>
+      <span class="btn-label">Menu</span>
+    </button>
+    <a class="btn btn-header" href="/" aria-label="Carte" title="Carte" data-header-pages-only>
+      <i class="bi bi-map" aria-hidden="true"></i>
+      <span class="btn-label">Carte</span>
+    </a>
+  </div>
+
+  <!-- Centre : titre (lien vers la carte) -->
+  <a class="header-center" href="/">
+    <h1 class="app-title">
+      <i class="bi bi-globe-europe-africa app-title-icon" aria-hidden="true"></i>
+      <span>Travel Map</span>
+    </h1>
+    <p class="app-subtitle">Carnet de voyages</p>
+  </a>
+
+  <!-- Droite : pays, places, roadtrips, vlogs -->
+  <nav class="header-right" aria-label="Navigation principale">
+    <a class="btn btn-header" href="/country.html" data-nav="countries" aria-label="Mes pays" title="Mes pays">
+      <i class="bi bi-globe2" aria-hidden="true"></i>
+      <span class="btn-label">Mes pays</span>
+    </a>
+    <a class="btn btn-header" href="/place.html" data-nav="places" aria-label="Mes places" title="Mes places">
+      <i class="bi bi-geo-alt" aria-hidden="true"></i>
+      <span class="btn-label">Mes places</span>
+    </a>
+    <a class="btn btn-header" href="/roadtrip.html" data-nav="roadtrips" aria-label="Mes roadtrips" title="Mes roadtrips">
+      <i class="bi bi-signpost-2" aria-hidden="true"></i>
+      <span class="btn-label">Mes roadtrips</span>
+    </a>
+    <a class="btn btn-header" href="/vlogs.html" data-nav="vlogs" aria-label="Mes vlogs" title="Mes vlogs">
+      <i class="bi bi-camera-reels" aria-hidden="true"></i>
+      <span class="btn-label">Mes vlogs</span>
+    </a>
+  </nav>
+
+</div>
