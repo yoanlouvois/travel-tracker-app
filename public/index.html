@@ -21,26 +21,44 @@
     <!-- HEADER -->
     <header class="app-header">
       <div class="header-inner">
-    
+
         <!-- Gauche -->
         <div class="header-left">
-          <button id="btnMenu" class="btn btn-header" type="button">
-            ☰ Menu
+          <button id="btnMenu" class="btn btn-header" type="button" aria-label="Menu" title="Menu">
+            <i class="bi bi-list" aria-hidden="true"></i>
+            <span class="btn-label">Menu</span>
           </button>
         </div>
-    
+
         <!-- Centre -->
         <div class="header-center">
-          <h1 class="app-title">Travel Map</h1>
+          <h1 class="app-title">
+            <i class="bi bi-globe-europe-africa app-title-icon" aria-hidden="true"></i>
+            <span>Travel Map</span>
+          </h1>
+          <p class="app-subtitle">Carnet de voyages</p>
         </div>
-    
-        <!-- Droite -->
-        <div class="header-right">
-          <button class="btn btn-header" type="button">Mon profil</button>
-          <button class="btn btn-header" type="button">Mes pays</button>
-          <button class="btn btn-header" type="button">Mes places</button>
-        </div>
-    
+
+        <!-- Droite : pays, places, roadtrips, vlogs -->
+        <nav class="header-right" aria-label="Navigation principale">
+          <button id="btnMyCountries" class="btn btn-header" type="button" aria-label="Mes pays" title="Mes pays">
+            <i class="bi bi-globe2" aria-hidden="true"></i>
+            <span class="btn-label">Mes pays</span>
+          </button>
+          <button id="btnMyPlaces" class="btn btn-header" type="button" aria-label="Mes places" title="Mes places">
+            <i class="bi bi-geo-alt" aria-hidden="true"></i>
+            <span class="btn-label">Mes places</span>
+          </button>
+          <button id="btnMyRoadtrips" class="btn btn-header" type="button" aria-label="Mes roadtrips" title="Mes roadtrips">
+            <i class="bi bi-signpost-2" aria-hidden="true"></i>
+            <span class="btn-label">Mes roadtrips</span>
+          </button>
+          <button id="btnMyVlogs" class="btn btn-header" type="button" aria-label="Mes vlogs" title="Mes vlogs">
+            <i class="bi bi-camera-reels" aria-hidden="true"></i>
+            <span class="btn-label">Mes vlogs</span>
+          </button>
+        </nav>
+
       </div>
     </header>
 
