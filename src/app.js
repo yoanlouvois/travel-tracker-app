@@ -4,6 +4,14 @@ const routes = require('./routes')
 
 const app = express()
 
+// Photos, couvertures, vlogs :
+// - app Electron : dans le dossier de l'utilisateur (UPLOADS_DIR, défini par electron/main.js)
+// - développement : public/uploads
+// Les chemins en base restent "/uploads/..." dans les deux cas.
+const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(__dirname, '..', 'public', 'uploads')
+app.locals.uploadsDir = UPLOADS_DIR // pour multer (partie médias)
+
+app.use('/uploads', express.static(UPLOADS_DIR))
 app.use(express.static(path.join(__dirname, '..', 'public')))
 app.use(express.json({ limit: '20mb' })) // 20 Mo : marge pour un gros export
 

@@ -1,6 +1,6 @@
 require('dotenv/config')
 
-const { PrismaClient } = require('@prisma/client')
+const { PrismaClient } = require('./generated/prisma')
 const { PrismaBetterSqlite3 } = require('@prisma/adapter-better-sqlite3')
 
 const url = process.env.DATABASE_URL || 'file:./dev.db'

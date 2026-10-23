@@ -2,4 +2,13 @@ node_modules/
 .env
 dev.db
 /src/generated/prisma
+src/generated/
 ./prisma
+*.png
+
+# =============================
+# Build Electron
+# =============================
+dist/
+build/template.db
+build/template.db-*

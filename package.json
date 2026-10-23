@@ -1,16 +1,78 @@
 {
+  "name": "travel-map",
+  "productName": "Travel Map",
+  "version": "1.0.0",
+  "description": "Carnet de voyages : pays, lieux, roadtrips et vlogs sur une carte",
+  "author": "Travel Map",
+  "private": true,
+  "main": "electron/main.js",
   "scripts": {
-    "seed:countries": "node scripts/seed-countries.js"
+    "start": "node src/server.js",
+    "app": "npm run native:electron && electron .",
+    "postapp": "npm run native:node",
+    "dist": "prisma generate && npm run db:template && npm run native:electron && electron-builder --win",
+    "postdist": "npm run native:node",
+    "native:electron": "node scripts/native.js electron",
+    "native:node": "node scripts/native.js node",
+    "seed:countries": "node scripts/seed-countries.js",
+    "db:template": "node scripts/build-template-db.js",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.4.1",
     "@prisma/client": "^7.4.1",
-    "boostrap": "^2.0.0",
+    "bootstrap": "^5.3.8",
+    "dotenv": "^18.0.9",
     "express": "^5.2.1",
     "leaflet": "^1.9.4",
     "ws": "^8.19.0"
   },
   "devDependencies": {
+    "electron": "^42.11.18",
+    "electron-builder": "^26.15.3",
     "prisma": "^7.4.1"
+  },
+  "overrides": {
+    "node-abi": "^4.39.0"
+  },
+  "build": {
+    "appId": "com.travelmap.app",
+    "productName": "Travel Map",
+    "npmRebuild": false,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "src/**/*",
+      "public/**/*",
+      "!public/uploads/**/*",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "asarUnpack": [
+      "node_modules/better-sqlite3/**/*",
+      "node_modules/@prisma/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "build/template.db",
+        "to": "template.db"
+      },
+      {
+        "from": "prisma/migrations",
+        "to": "migrations"
+      }
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Travel Map"
+    }
   }
 }
