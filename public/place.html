@@ -165,20 +165,18 @@
                 </button>
               </div>
 
-              <!-- Ajout (interface seulement, envoi pas encore branché) -->
+              <!-- Ajout : choisir / glisser des fichiers, puis envoyer -->
               <div class="upload-panel" data-upload-panel hidden>
                 <label class="cover-drop">
                   <input type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm" data-upload-input>
                   <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
                   <span class="cover-drop-title">Choisir ou glisser des fichiers…</span>
-                  <span class="cover-drop-hint">Photos JPG, PNG, WebP · vidéos MP4, WebM · plusieurs à la fois</span>
+                  <span class="cover-drop-hint">Photos JPG, PNG, WebP (20 Mo max) · vidéos MP4, WebM (500 Mo max) · 30 fichiers max par envoi</span>
                 </label>
 
                 <ul class="photo-grid" data-list="pending"></ul>
 
-                <p class="form-hint">
-                  L'envoi n'est pas encore branché : les fichiers sont seulement prévisualisés.
-                </p>
+                <progress class="upload-progress" max="100" value="0" data-upload-progress hidden></progress>
                 <p data-upload-message hidden></p>
 
                 <div class="btn-row">

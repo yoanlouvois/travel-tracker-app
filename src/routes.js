@@ -7,6 +7,7 @@ const tripsController = require('./controllers/trips.controller')
 const mediaController = require('./controllers/media.controller')
 const backupController = require('./controllers/backup.controller')
 const geocodeController = require('./controllers/geocode.controller')
+const { uploadPlaceMedia, uploadCountryCover } = require('./upload/multer')
 
 const router = express.Router()
 
@@ -61,5 +62,12 @@ router.post('/backup/import', backupController.importJson)
 
 // Géocodage
 router.get('/geocode/search', geocodeController.search)
+
+// Photos / vidéos d'un lieu
+router.post('/places/:id/media', mediaController.ensurePlace, uploadPlaceMedia, mediaController.uploadForPlace)
+
+// Couverture d'un pays
+router.post('/countries/:id/cover', countriesController.ensureCountry, uploadCountryCover, countriesController.uploadCover)
+router.delete('/countries/:id/cover', countriesController.removeCover)
 
 module.exports = router

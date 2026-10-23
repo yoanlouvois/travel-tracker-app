@@ -16,7 +16,6 @@ async function getById(req, res, next) {
     const country = await countriesService.getById(req.params.id)
     res.json(country)
   } catch (err) {
-    // Si tu veux, on peut faire une gestion 404 plus propre plus tard
     next(err)
   }
 }
@@ -24,7 +23,6 @@ async function getById(req, res, next) {
 // POST /api/countries
 async function create(req, res, next) {
   try {
-    console.log(req.body)
     const created = await countriesService.create(req.body)
     res.status(201).json(created)
   } catch (err) {
@@ -52,10 +50,45 @@ async function remove(req, res, next) {
   }
 }
 
+// Middleware à placer AVANT l'upload : refuse tout de suite un pays inexistant
+// (évite d'écrire le fichier pour rien)
+async function ensureCountry(req, res, next) {
+  try {
+    await countriesService.assertCountryExists(req.params.id)
+    next()
+  } catch (err) {
+    next(err)
+  }
+}
+
+// POST /api/countries/:id/cover  (multipart/form-data, champ "cover", une image)
+// À placer après le middleware uploadCountryCover (src/upload/multer.js)
+async function uploadCover(req, res, next) {
+  try {
+    const updated = await countriesService.setCover(req.params.id, req.file)
+    res.json(updated)
+  } catch (err) {
+    next(err)
+  }
+}
+
+// DELETE /api/countries/:id/cover
+async function removeCover(req, res, next) {
+  try {
+    const updated = await countriesService.removeCover(req.params.id)
+    res.json(updated)
+  } catch (err) {
+    next(err)
+  }
+}
+
 module.exports = {
   list,
   getById,
   create,
   update,
-  remove
+  remove,
+  ensureCountry,
+  uploadCover,
+  removeCover,
 }

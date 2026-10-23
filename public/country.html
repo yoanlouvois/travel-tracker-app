@@ -38,7 +38,7 @@
           <p class="app-subtitle">Carnet de voyages</p>
         </a>
 
-        <!-- Droite : pays, places, roadtrips, vlogs -->
+        <!-- Droite : pays, roadtrips, vlogs -->
         <nav class="header-right" aria-label="Navigation principale">
           <a class="btn btn-header" href="/country.html" data-nav="countries" aria-label="Mes pays" title="Mes pays">
             <i class="bi bi-globe2" aria-hidden="true"></i>
@@ -109,7 +109,7 @@
 
             <button type="button" class="hero-btn" data-cover-edit>
               <i class="bi bi-image" aria-hidden="true"></i>
-              <span>Changer la couverture</span>
+              <span data-cover-edit-label>Changer la couverture</span>
             </button>
 
             <div class="country-hero-frame">
@@ -124,7 +124,7 @@
             </div>
           </div>
 
-          <!-- Changement de couverture (interface seulement, envoi pas encore branché) -->
+          <!-- Couverture : choisir une image, l'envoyer, ou retirer la couverture actuelle -->
           <section class="page-card cover-editor" data-cover-editor hidden>
             <h6>Image de couverture</h6>
 
@@ -132,18 +132,22 @@
               <input type="file" accept="image/jpeg,image/png,image/webp" data-cover-input>
               <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
               <span class="cover-drop-title" data-cover-filename>Choisir une image…</span>
-              <span class="cover-drop-hint">JPG, PNG ou WebP · format paysage conseillé</span>
+              <span class="cover-drop-hint">JPG, PNG ou WebP · 20 Mo max · format paysage conseillé</span>
             </label>
 
             <p class="form-hint">
-              L'envoi de l'image n'est pas encore branché : tu peux prévisualiser,
-              mais la couverture ne sera pas enregistrée.
+              La nouvelle image remplace l'ancienne couverture, qui est supprimée.
             </p>
+
+            <progress class="upload-progress" max="100" value="0" data-cover-progress hidden></progress>
             <p data-cover-message hidden></p>
 
             <div class="btn-row">
               <button type="button" class="btn-primary-soft" data-cover-save disabled>Enregistrer</button>
               <button type="button" data-cover-cancel>Annuler</button>
+              <button type="button" class="btn-danger-soft" data-cover-remove hidden>
+                <i class="bi bi-trash" aria-hidden="true"></i> Retirer la couverture
+              </button>
             </div>
           </section>
 

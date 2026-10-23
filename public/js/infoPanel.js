@@ -238,6 +238,13 @@
       const del = root.querySelector('[data-place-delete]')
       if (del) del.dataset.placeId = data.id || ''
 
+      // lien vers la page du lieu
+      const link = root.querySelector('[data-page-link]')
+      if (link && data.id) {
+        link.href = `place.html?id=${encodeURIComponent(data.id)}`
+        link.hidden = false
+      }
+
       return root
     }
 
@@ -300,6 +307,13 @@
 
       const del = root.querySelector('[data-roadtrip-delete]')
       if (del) del.dataset.tripId = data.id || ''
+
+      // lien vers la page du roadtrip
+      const link = root.querySelector('[data-page-link]')
+      if (link && data.id) {
+        link.href = `roadtrip.html?id=${encodeURIComponent(data.id)}`
+        link.hidden = false
+      }
 
       return root
     }

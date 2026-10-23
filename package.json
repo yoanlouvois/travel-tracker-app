@@ -25,6 +25,7 @@
     "dotenv": "^18.0.9",
     "express": "^5.2.1",
     "leaflet": "^1.9.4",
+    "multer": "^2.5.0",
     "ws": "^8.19.0"
   },
   "devDependencies": {

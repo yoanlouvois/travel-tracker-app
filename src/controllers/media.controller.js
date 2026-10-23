@@ -1,11 +1,11 @@
 const mediaService = require('../services/media.service')
 
-// GET /api/media
+// GET /api/media?placeId=...&mediaType=PHOTO|VIDEO
 async function list(req, res, next) {
   try {
     const media = await mediaService.list({
       placeId: req.query.placeId,
-      mediaType: req.query.mediaType
+      mediaType: req.query.mediaType,
     })
     res.json(media)
   } catch (err) {
@@ -23,7 +23,7 @@ async function getById(req, res, next) {
   }
 }
 
-// POST /api/media
+// POST /api/media  (JSON : { placeId, filePath, ... } pour un fichier déjà présent)
 async function create(req, res, next) {
   try {
     const created = await mediaService.create(req.body)
@@ -33,7 +33,29 @@ async function create(req, res, next) {
   }
 }
 
-// PATCH /api/media/:id
+// Middleware à placer AVANT l'upload : refuse tout de suite un lieu inexistant
+// (évite d'écrire de gros fichiers pour rien)
+async function ensurePlace(req, res, next) {
+  try {
+    await mediaService.assertPlaceExists(req.params.id)
+    next()
+  } catch (err) {
+    next(err)
+  }
+}
+
+// POST /api/places/:id/media  (multipart/form-data, champ "files", plusieurs fichiers)
+// À placer après le middleware uploadPlaceMedia (src/upload/multer.js)
+async function uploadForPlace(req, res, next) {
+  try {
+    const created = await mediaService.createFromUploads(req.params.id, req.files)
+    res.status(201).json(created)
+  } catch (err) {
+    next(err)
+  }
+}
+
+// PATCH /api/media/:id  (légende, date, ordre...)
 async function update(req, res, next) {
   try {
     const updated = await mediaService.update(req.params.id, req.body)
@@ -43,7 +65,7 @@ async function update(req, res, next) {
   }
 }
 
-// DELETE /api/media/:id
+// DELETE /api/media/:id  (supprime aussi le fichier)
 async function remove(req, res, next) {
   try {
     await mediaService.remove(req.params.id)
@@ -57,6 +79,8 @@ module.exports = {
   list,
   getById,
   create,
+  ensurePlace,
+  uploadForPlace,
   update,
-  remove
+  remove,
 }

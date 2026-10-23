@@ -12,3 +12,8 @@ src/generated/
 dist/
 build/template.db
 build/template.db-*
+
+*.jpeg
+*.jpg
+*.gif
+*.mp4

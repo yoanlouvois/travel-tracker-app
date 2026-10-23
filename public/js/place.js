@@ -1,10 +1,11 @@
 // public/js/place.js
-// /place.html?id=...  -> un lieu : infos modifiables + photos (galerie, visionneuse)
+// /place.html?id=...  -> un lieu : infos modifiables + photos/vidéos
+//                        (galerie, visionneuse, ajout, suppression)
 // /place.html         -> message "aucun lieu sélectionné"
 //
 // Dépend de : window.Api (api.js)
-// Photos : ajout et suppression = interface seulement, pas encore branchées
-//          (voir les TODO plus bas).
+//   POST   /api/places/:id/media  (champ "files", plusieurs fichiers) -> médias créés
+//   DELETE /api/media/:id                                            -> supprime aussi le fichier
 
 (function () {
   // =============================
@@ -25,6 +26,12 @@
     ACTIVITY: 'bi-bicycle',
     VIEWPOINT: 'bi-camera',
   }
+
+  // Mêmes règles que le serveur (src/upload/multer.js)
+  const MB = 1024 * 1024
+  const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+  const VIDEO_TYPES = ['video/mp4', 'video/webm']
+  const LIMITS = { photo: 20 * MB, video: 500 * MB, filesPerUpload: 30 }
 
   // =============================
   // HELPERS
@@ -60,6 +67,17 @@
     el.hidden = !text
   }
 
+  // Message d'erreur renvoyé par l'API ({ error: "..." }), sinon le message par défaut
+  function apiErrorMessage(err, fallback) {
+    try {
+      const data = JSON.parse(err?.message)
+      if (data?.error) return data.error
+    } catch {
+      // pas du JSON : erreur réseau, etc.
+    }
+    return fallback
+  }
+
   function formField(form, name) {
     return form.querySelector(`[name="${name}"]`)
   }
@@ -78,8 +96,16 @@
     return iso2 ? `/resources/${String(iso2).toLowerCase()}.png` : ''
   }
 
+  function formatSize(bytes) {
+    return `${(bytes / MB).toFixed(1).replace('.', ',')} Mo`
+  }
+
   function isVideo(media) {
     return media.mediaType === 'VIDEO'
+  }
+
+  function sortMedia(list) {
+    return list.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
   }
 
   // vignette : <img> pour une photo, <video> (1re image) pour une vidéo
@@ -232,34 +258,42 @@
     renderForm()
 
     // ---------- photos ----------
-    const media = [...(place.media || [])]
-      .filter((m) => m.filePath)
-      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+    // Un seul tableau partagé par la galerie et la visionneuse :
+    // il est modifié sur place (ajout / suppression), jamais remplacé.
+    const media = sortMedia((place.media || []).filter((m) => m.filePath))
 
     const lightbox = setupLightbox(media, place.name)
-    setupGallery(media, lightbox)
-    setupUpload()
+    const gallery = setupGallery(media, lightbox)
+
+    setupUpload(place.id, (created) => {
+      media.push(...created.filter((m) => m.filePath))
+      sortMedia(media)
+      gallery.render()
+    })
 
     loadingEl.hidden = true
     view.hidden = false
   }
 
   // =============================
-  // GALERIE + SUPPRESSION (interface)
+  // GALERIE + SUPPRESSION
   // =============================
   function setupGallery(media, lightbox) {
     const messageEl = view.querySelector('[data-photos-message]')
     const list = view.querySelector('[data-list="photos"]')
 
-    setField(view, 'photoCount', media.length)
+    function render() {
+      setField(view, 'photoCount', media.length)
 
-    fillList(view, 'photos', 'photo', media, (node, m, i) => {
-      node.dataset.index = i
-      setThumb(node, m.filePath, isVideo(m), m.caption)
-      node.querySelector('[data-play]').hidden = !isVideo(m)
-      setField(node, 'caption', m.caption || '')
-      node.querySelector('[data-field="caption"]').hidden = !m.caption
-    })
+      fillList(view, 'photos', 'photo', media, (node, m, i) => {
+        node.dataset.index = i
+        node.dataset.id = m.id
+        setThumb(node, m.filePath, isVideo(m), m.caption)
+        node.querySelector('[data-play]').hidden = !isVideo(m)
+        setField(node, 'caption', m.caption || '')
+        node.querySelector('[data-field="caption"]').hidden = !m.caption
+      })
+    }
 
     function closeConfirms(except) {
       list.querySelectorAll('[data-confirm]').forEach((c) => {
@@ -267,9 +301,44 @@
       })
     }
 
+    function setTileBusy(tile, busy) {
+      tile.classList.toggle('is-busy', busy)
+      tile.querySelectorAll('button').forEach((b) => { b.disabled = busy })
+    }
+
+    async function deleteTile(tile) {
+      const id = tile.dataset.id
+      setTileBusy(tile, true)
+      showMessage(messageEl, null)
+
+      // vidéo : libère le fichier avant suppression (Windows refuse de supprimer un fichier ouvert)
+      const vid = tile.querySelector('[data-video]')
+      if (vid?.getAttribute('src')) {
+        vid.removeAttribute('src')
+        vid.load()
+      }
+
+      try {
+        await Api.deleteMedia(id)
+      } catch (err) {
+        // déjà supprimé ailleurs (404) : on le retire quand même de la galerie
+        const notFound = /not found/i.test(apiErrorMessage(err, ''))
+        if (!notFound) {
+          console.error('Erreur suppression média:', err)
+          setTileBusy(tile, false)
+          showMessage(messageEl, apiErrorMessage(err, 'Impossible de supprimer ce fichier. Réessaie.'))
+          return
+        }
+      }
+
+      const index = media.findIndex((m) => m.id === id)
+      if (index !== -1) media.splice(index, 1)
+      render()
+    }
+
     list.addEventListener('click', (e) => {
       const tile = e.target.closest('.photo-tile')
-      if (!tile) return
+      if (!tile || tile.classList.contains('is-busy')) return
       const confirmBox = tile.querySelector('[data-confirm]')
 
       // agrandir
@@ -293,9 +362,7 @@
       // confirmer
       if (e.target.closest('[data-confirm-yes]')) {
         confirmBox.hidden = true
-        // TODO : await Api.deleteMedia(media[index].id), puis retirer la vignette
-        //        (et supprimer le fichier du disque côté serveur)
-        showMessage(messageEl, "La suppression n'est pas encore branchée : la photo n'a pas été supprimée.")
+        deleteTile(tile)
       }
     })
 
@@ -303,12 +370,16 @@
     list.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeConfirms(null)
     })
+
+    render()
+    return { render }
   }
 
   // =============================
-  // AJOUT (interface)
+  // AJOUT
   // =============================
-  function setupUpload() {
+  // onUploaded(createdMedia[]) est appelé après un envoi réussi
+  function setupUpload(placeId, onUploaded) {
     const openBtn = view.querySelector('[data-upload-open]')
     const panel = view.querySelector('[data-upload-panel]')
     const input = panel.querySelector('[data-upload-input]')
@@ -316,29 +387,71 @@
     const sendBtn = panel.querySelector('[data-upload-send]')
     const cancelBtn = panel.querySelector('[data-upload-cancel]')
     const messageEl = panel.querySelector('[data-upload-message]')
+    const progressEl = panel.querySelector('[data-upload-progress]')
     const pendingList = panel.querySelector('[data-list="pending"]')
 
     let pending = [] // [{ file, url }]
+    let busy = false
 
     function render() {
       fillList(panel, 'pending', 'pending', pending, (node, p, i) => {
         node.dataset.index = i
-        setThumb(node, p.url, p.file.type.startsWith('video/'), p.file.name)
+        setThumb(node, p.url, VIDEO_TYPES.includes(p.file.type), p.file.name)
         setField(node, 'filename', p.file.name)
+        node.querySelector('[data-pending-remove]').disabled = busy
       })
       setField(panel, 'pendingCount', pending.length ? `(${pending.length})` : '')
-      sendBtn.disabled = pending.length === 0
+      sendBtn.disabled = busy || pending.length === 0
+      cancelBtn.disabled = busy
+      input.disabled = busy
+      drop.classList.toggle('is-disabled', busy)
+    }
+
+    function setBusy(value) {
+      busy = value
+      render()
+    }
+
+    // fraction entre 0 et 1, null = masquer
+    function setProgress(fraction) {
+      if (fraction == null) {
+        progressEl.hidden = true
+        progressEl.value = 0
+        return
+      }
+      progressEl.hidden = false
+      progressEl.value = Math.round(fraction * 100)
+    }
+
+    // raison du refus d'un fichier, ou null s'il est accepté
+    function rejectReason(file) {
+      if (IMAGE_TYPES.includes(file.type)) {
+        return file.size > LIMITS.photo ? `trop lourde (${formatSize(file.size)}, 20 Mo max)` : null
+      }
+      if (VIDEO_TYPES.includes(file.type)) {
+        return file.size > LIMITS.video ? `trop lourde (${formatSize(file.size)}, 500 Mo max)` : null
+      }
+      return 'format non accepté'
     }
 
     function addFiles(fileList) {
-      const files = [...(fileList || [])]
-      const accepted = files.filter((f) => f.type.startsWith('image/') || f.type.startsWith('video/'))
+      if (busy) return
+      const problems = []
 
-      showMessage(messageEl, accepted.length < files.length
-        ? 'Certains fichiers ont été ignorés : seules les photos et vidéos sont acceptées.'
-        : null)
+      for (const file of fileList || []) {
+        const reason = rejectReason(file)
+        if (reason) {
+          problems.push(`${file.name} : ${reason}`)
+          continue
+        }
+        if (pending.length >= LIMITS.filesPerUpload) {
+          problems.push(`${file.name} : ${LIMITS.filesPerUpload} fichiers maximum par envoi`)
+          continue
+        }
+        pending.push({ file, url: URL.createObjectURL(file) })
+      }
 
-      for (const file of accepted) pending.push({ file, url: URL.createObjectURL(file) })
+      showMessage(messageEl, problems.length ? `Fichiers ignorés — ${problems.join(' · ')}` : null)
       input.value = '' // permet de re-choisir le même fichier
       render()
     }
@@ -346,6 +459,7 @@
     function reset() {
       pending.forEach((p) => URL.revokeObjectURL(p.url))
       pending = []
+      setProgress(null)
       showMessage(messageEl, null)
       render()
     }
@@ -361,7 +475,7 @@
 
     drop.addEventListener('dragover', (e) => {
       e.preventDefault()
-      drop.classList.add('is-dragover')
+      if (!busy) drop.classList.add('is-dragover')
     })
     drop.addEventListener('dragleave', () => drop.classList.remove('is-dragover'))
     drop.addEventListener('drop', (e) => {
@@ -372,7 +486,7 @@
 
     // retirer un fichier avant envoi
     pendingList.addEventListener('click', (e) => {
-      if (!e.target.closest('[data-pending-remove]')) return
+      if (busy || !e.target.closest('[data-pending-remove]')) return
       const i = Number(e.target.closest('.photo-tile').dataset.index)
       URL.revokeObjectURL(pending[i].url)
       pending.splice(i, 1)
@@ -380,13 +494,35 @@
     })
 
     cancelBtn.addEventListener('click', () => {
+      if (busy) return
       reset()
       open(false)
     })
 
-    sendBtn.addEventListener('click', () => {
-      // TODO : FormData avec les fichiers -> POST (multer), puis recharger la galerie
-      showMessage(messageEl, "L'envoi n'est pas encore branché : les fichiers n'ont pas été enregistrés.")
+    // ---- envoi : tous les fichiers en une requête ----
+    sendBtn.addEventListener('click', async () => {
+      if (busy || pending.length === 0) return
+
+      setBusy(true)
+      showMessage(messageEl, null)
+      setProgress(0)
+
+      try {
+        const files = pending.map((p) => p.file)
+        const created = await Api.uploadPlaceMedia(placeId, files, { onProgress: setProgress })
+
+        busy = false
+        reset()
+        open(false)
+        onUploaded(Array.isArray(created) ? created : [])
+      } catch (err) {
+        // en cas d'erreur, le serveur n'a rien gardé : les fichiers restent à envoyer
+        console.error('Erreur envoi médias:', err)
+        setProgress(null)
+        showMessage(messageEl, apiErrorMessage(err, "Impossible d'envoyer les fichiers. Réessaie."))
+      } finally {
+        setBusy(false)
+      }
     })
 
     render()
@@ -395,6 +531,7 @@
   // =============================
   // VISIONNEUSE
   // =============================
+  // media : tableau partagé avec la galerie (lu à chaque ouverture)
   function setupLightbox(media, placeName) {
     const dialog = document.querySelector('[data-lightbox]')
     const img = dialog.querySelector('[data-lightbox-img]')
@@ -443,6 +580,7 @@
     }
 
     function open(i) {
+      if (!media[i]) return
       index = i
       render()
       dialog.showModal()
@@ -462,7 +600,12 @@
       if (e.target === dialog) dialog.close()
     })
 
-    dialog.addEventListener('close', () => video.pause())
+    // arrête la vidéo et libère le fichier à la fermeture
+    dialog.addEventListener('close', () => {
+      video.pause()
+      video.removeAttribute('src')
+      video.load()
+    })
 
     return { open }
   }

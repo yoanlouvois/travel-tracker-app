@@ -1,10 +1,9 @@
 // public/js/country.js
 // /country.html          -> liste des pays visités (ordre alphabétique, drapeaux)
-// /country.html?id=...   -> fiche d'un pays : couverture, statut modifiable,
-//                           chiffres, lieux en cartes (1 photo max par lieu)
+// /country.html?id=...   -> fiche d'un pays : couverture (changer / retirer),
+//                           statut modifiable, chiffres, lieux en cartes (1 photo max par lieu)
 //
 // Dépend de : window.Api (api.js), window.IsoCodes (map/isoCodes.js)
-// Couverture : interface seulement, l'envoi du fichier n'est pas encore branché.
 
 (function () {
   // =============================
@@ -31,6 +30,10 @@
     toVisit: 'À visiter',
     none: 'Pas visité',
   }
+
+  // Couverture : mêmes règles que le serveur (src/upload/multer.js)
+  const COVER_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+  const COVER_MAX_BYTES = 20 * 1024 * 1024
 
   // =============================
   // HELPERS
@@ -67,8 +70,23 @@
     el.hidden = !text
   }
 
+  // Message d'erreur renvoyé par l'API ({ error: "..." }), sinon le message par défaut
+  function apiErrorMessage(err, fallback) {
+    try {
+      const data = JSON.parse(err?.message)
+      if (data?.error) return data.error
+    } catch {
+      // pas du JSON : erreur réseau, etc.
+    }
+    return fallback
+  }
+
   function plural(count, singular, pluralForm) {
     return `${count} ${count > 1 ? (pluralForm || singular + 's') : singular}`
+  }
+
+  function formatSize(bytes) {
+    return `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')} Mo`
   }
 
   // minuscule, sans accents : pour la recherche
@@ -333,53 +351,98 @@
     })
   }
 
-  // ---------- changement de couverture (interface seulement) ----------
+  // ---------- couverture : changer / retirer ----------
+  // POST   /api/countries/:id/cover  (champ "cover")  -> pays mis à jour
+  // DELETE /api/countries/:id/cover                   -> pays mis à jour
   function setupCoverEditor(country) {
     const editBtn = detailView.querySelector('[data-cover-edit]')
+    const editLabel = detailView.querySelector('[data-cover-edit-label]')
     const editor = detailView.querySelector('[data-cover-editor]')
     const input = editor.querySelector('[data-cover-input]')
     const filenameEl = editor.querySelector('[data-cover-filename]')
     const messageEl = editor.querySelector('[data-cover-message]')
+    const progressEl = editor.querySelector('[data-cover-progress]')
     const saveBtn = editor.querySelector('[data-cover-save]')
     const cancelBtn = editor.querySelector('[data-cover-cancel]')
+    const removeBtn = editor.querySelector('[data-cover-remove]')
     const previewTag = detailView.querySelector('[data-preview-tag]')
     const drop = editor.querySelector('.cover-drop')
 
     const defaultFilename = filenameEl.textContent
-    let previewUrl = null
+    let previewUrl = null   // URL locale de l'aperçu (à libérer)
+    let pendingFile = null  // fichier choisi, pas encore envoyé
+    let busy = false        // envoi ou suppression en cours
 
+    // état des boutons selon : couverture existante ? fichier choisi ? envoi en cours ?
+    function refreshControls() {
+      const hasCover = !!country.uiCoverImagePath
+      if (editLabel) editLabel.textContent = hasCover ? 'Changer la couverture' : 'Ajouter une couverture'
+
+      removeBtn.hidden = !hasCover
+      removeBtn.disabled = busy
+      saveBtn.disabled = busy || !pendingFile
+      cancelBtn.disabled = busy
+      input.disabled = busy
+      drop.classList.toggle('is-disabled', busy)
+    }
+
+    function setBusy(value) {
+      busy = value
+      refreshControls()
+    }
+
+    // fraction entre 0 et 1, null = masquer
+    function setProgress(fraction) {
+      if (fraction == null) {
+        progressEl.hidden = true
+        progressEl.value = 0
+        return
+      }
+      progressEl.hidden = false
+      progressEl.value = Math.round(fraction * 100)
+    }
+
+    // oublie le fichier choisi et réaffiche la vraie couverture
     function clearPreview() {
       if (previewUrl) URL.revokeObjectURL(previewUrl)
       previewUrl = null
+      pendingFile = null
       input.value = ''
       filenameEl.textContent = defaultFilename
-      saveBtn.disabled = true
       previewTag.hidden = true
-      showMessage(messageEl, null)
+      setProgress(null)
       renderCover(country.uiCoverImagePath)
+      refreshControls()
     }
 
     function open(isOpen) {
       editor.hidden = !isOpen
       editBtn.hidden = isOpen
+      showMessage(messageEl, null)
       if (isOpen) editor.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }
 
     function preview(file) {
-      if (!file) return
-      if (!file.type.startsWith('image/')) {
-        showMessage(messageEl, 'Choisis un fichier image (JPG, PNG ou WebP).')
+      if (!file || busy) return
+
+      if (!COVER_TYPES.includes(file.type)) {
+        showMessage(messageEl, 'Choisis une image JPG, PNG ou WebP.')
+        return
+      }
+      if (file.size > COVER_MAX_BYTES) {
+        showMessage(messageEl, `Image trop lourde (${formatSize(file.size)}) : 20 Mo maximum.`)
         return
       }
 
       if (previewUrl) URL.revokeObjectURL(previewUrl)
       previewUrl = URL.createObjectURL(file)
+      pendingFile = file
 
       renderCover(previewUrl)
       filenameEl.textContent = file.name
-      saveBtn.disabled = false
       previewTag.hidden = false
       showMessage(messageEl, null)
+      refreshControls()
     }
 
     editBtn.addEventListener('click', () => open(true))
@@ -389,7 +452,7 @@
     // glisser-déposer sur la zone
     drop.addEventListener('dragover', (e) => {
       e.preventDefault()
-      drop.classList.add('is-dragover')
+      if (!busy) drop.classList.add('is-dragover')
     })
     drop.addEventListener('dragleave', () => drop.classList.remove('is-dragover'))
     drop.addEventListener('drop', (e) => {
@@ -399,13 +462,54 @@
     })
 
     cancelBtn.addEventListener('click', () => {
+      if (busy) return
       clearPreview()
       open(false)
     })
 
-    saveBtn.addEventListener('click', () => {
-      // TODO : envoyer le fichier (FormData) puis mettre à jour country.uiCoverImagePath
-      showMessage(messageEl, "L'envoi de la couverture n'est pas encore disponible : l'image n'a pas été enregistrée.")
+    // ---- envoi ----
+    saveBtn.addEventListener('click', async () => {
+      if (!pendingFile || busy) return
+
+      setBusy(true)
+      showMessage(messageEl, null)
+      setProgress(0)
+
+      try {
+        const updated = await Api.uploadCountryCover(country.id, pendingFile, { onProgress: setProgress })
+        country.uiCoverImagePath = updated?.uiCoverImagePath ?? null
+        clearPreview() // affiche la couverture enregistrée
+        open(false)
+      } catch (err) {
+        console.error('Erreur envoi couverture:', err)
+        setProgress(null)
+        showMessage(messageEl, apiErrorMessage(err, "Impossible d'enregistrer la couverture. Réessaie."))
+      } finally {
+        setBusy(false)
+      }
     })
+
+    // ---- retrait ----
+    removeBtn.addEventListener('click', async () => {
+      if (busy || !country.uiCoverImagePath) return
+      if (!window.confirm("Retirer la couverture de ce pays ? L'image sera supprimée.")) return
+
+      setBusy(true)
+      showMessage(messageEl, null)
+
+      try {
+        const updated = await Api.deleteCountryCover(country.id)
+        country.uiCoverImagePath = updated?.uiCoverImagePath ?? null
+        clearPreview() // retour au drapeau flouté
+        open(false)
+      } catch (err) {
+        console.error('Erreur retrait couverture:', err)
+        showMessage(messageEl, apiErrorMessage(err, 'Impossible de retirer la couverture. Réessaie.'))
+      } finally {
+        setBusy(false)
+      }
+    })
+
+    refreshControls()
   }
 })()
