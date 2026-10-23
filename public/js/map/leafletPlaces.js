@@ -280,6 +280,16 @@
       }
     }
 
+    // Création à partir d'un objet déjà au format de l'API
+    // (ex : résultat de recherche Nominatim, avec countryId, source, nominatimPlaceId...).
+    // Lève une erreur si l'API refuse : l'appelant affiche le message.
+    async function createPlaceFromApi(payload) {
+      const created = await window.Api.createPlace(payload)
+      const entry = addMarker(toFrontData(created))
+      map.fire("place:created", { placeId: created.id, data: entry.data })
+      return entry
+    }
+
     // changes = champs en base (name, description, visited, visitedAt, lat, lng...).
     // On peut aussi passer frontType: "VISITED" | "CITY" | ... pour changer le type.
     async function updatePlace(id, changes = {}) {
@@ -407,6 +417,7 @@
       placesById,
       ready: placesReady,
       createPlace,
+      createPlaceFromApi,
       updatePlace,
       deletePlace,
       removePlace: deletePlace, // alias pour le code existant

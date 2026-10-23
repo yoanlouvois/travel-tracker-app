@@ -6,6 +6,7 @@ const placesController = require('./controllers/places.controller')
 const tripsController = require('./controllers/trips.controller')
 const mediaController = require('./controllers/media.controller')
 const backupController = require('./controllers/backup.controller')
+const geocodeController = require('./controllers/geocode.controller')
 
 const router = express.Router()
 
@@ -57,5 +58,8 @@ router.delete('/media/:id', mediaController.remove)
 // Backup 
 router.get('/backup/export', backupController.exportJson)
 router.post('/backup/import', backupController.importJson)
+
+// Géocodage
+router.get('/geocode/search', geocodeController.search)
 
 module.exports = router

@@ -31,6 +31,7 @@ window.initPlaces(map)
 window.initVisitedCountriesMode(map)
 window.initRoadtrips(map)
 window.initInfoPanel(map)
+window.initSearch(map)
 
 // ===== Listeners =====
 btnMenu.addEventListener('click', () => {
@@ -39,11 +40,6 @@ btnMenu.addEventListener('click', () => {
 })
 
 btnCloseMenu.addEventListener('click', () => setSidebar(false))
-
-document.getElementById('btnSearch').addEventListener('click', () => {
-  const q = document.getElementById('searchInput').value.trim()
-  console.log("Recherche:", q)
-})
 
 // ===== Side Bar functions =====
 function setSidebar(open) {

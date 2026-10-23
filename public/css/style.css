@@ -3106,3 +3106,255 @@
   background: rgba(224,90,90,0.12);
   color: #f3b4b4;
 }
+
+/* =========================
+   SIDEBAR : RECHERCHE DE LIEUX
+========================= */
+
+.search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: #222;
+}
+
+.search-results [hidden] {
+  display: none !important;
+}
+
+.search-results-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.search-status {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.search-status[data-type="loading"] {
+  color: #ccc;
+}
+
+.search-status[data-type="error"] {
+  color: #f3b4b4;
+}
+
+.search-clear {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.7rem;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.search-clear:hover {
+  background: #3a3a3a;
+  color: #fff;
+}
+
+.search-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.search-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: #1c1c1c;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.search-item.is-active {
+  border-color: rgba(120,200,160,0.55);
+  background: rgba(120,200,160,0.06);
+}
+
+/* ligne cliquable : centre la carte */
+.search-item-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 2px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.search-item-main:hover .search-item-name {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.search-item-main:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.5);
+  outline-offset: 2px;
+}
+
+.search-item-main > i {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: #2a2a2a;
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.85);
+}
+
+.search-item-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.search-item-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.search-item-detail {
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.search-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding-left: 38px; /* aligné sous le nom */
+}
+
+.search-item-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  padding: 3px 9px;
+}
+
+.search-item-actions .btn:disabled {
+  opacity: 0.45;
+}
+
+.search-item-note {
+  font-size: 0.72rem;
+  color: #f0c27a;
+}
+
+/* options d'ajout */
+.search-add-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 38px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px dashed rgba(255,255,255,0.15);
+  background: #181818;
+}
+
+.search-add-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.search-add-form .form-select {
+  background-color: #1f1f1f;
+  border-color: rgba(255,255,255,0.12);
+  color: var(--text);
+  font-size: 0.8rem;
+  color-scheme: dark;
+}
+
+.search-add-status {
+  display: flex;
+  gap: 6px;
+}
+
+.search-add-status label {
+  flex: 1 1 0;
+  position: relative;
+  padding: 5px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: #2a2a2a;
+  color: #ccc;
+  font-size: 0.78rem;
+  text-align: center;
+  cursor: pointer;
+}
+
+.search-add-status input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.search-add-status label:has(input:focus-visible) {
+  outline: 2px solid rgba(255,255,255,0.5);
+  outline-offset: 2px;
+}
+
+.search-add-status label:has(input[value="true"]:checked) {
+  background: var(--visited);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.search-add-status label:has(input[value="false"]:checked) {
+  background: var(--to-visit);
+  border-color: var(--to-visit-border, rgba(255,80,80,0.5));
+  color: #fff;
+}
+
+.search-add-error {
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(224,90,90,0.35);
+  background: rgba(224,90,90,0.12);
+  color: #f3b4b4;
+  font-size: 0.75rem;
+}

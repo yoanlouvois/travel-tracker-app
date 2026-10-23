@@ -69,19 +69,82 @@
       <aside class="sidebar">
         <div class="sidebar-inner">
 
-          <!-- Navbar search -->
+          <!-- Recherche de lieux (js/search.js -> /api/geocode/search) -->
           <nav class="navbar sidebar-search">
-            <form class="d-flex w-100" role="search" onsubmit="return false;">
+            <form class="d-flex w-100" role="search" data-search-form>
               <input
                 id="searchInput"
                 class="form-control form-control-sm me-2"
                 type="search"
-                placeholder="Rechercher un lieu..."
-                aria-label="Search"
+                name="q"
+                placeholder="Rechercher un lieu…"
+                aria-label="Rechercher un lieu"
+                autocomplete="off"
               />
-              <button id="btnSearch" class="btn btn-primary btn-sm" type="button">Go</button>
+              <button id="btnSearch" class="btn btn-primary btn-sm" type="submit">Go</button>
             </form>
           </nav>
+
+          <!-- Résultats de recherche -->
+          <div class="search-results" data-search-results hidden>
+            <div class="search-results-head">
+              <span class="search-status" data-search-status></span>
+              <button type="button" class="search-clear" data-search-clear aria-label="Effacer la recherche" title="Effacer">
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            <ul class="search-list" data-search-list></ul>
+
+            <!-- modèle d'un résultat -->
+            <template data-search-item>
+              <li class="search-item">
+                <button type="button" class="search-item-main" data-search-go title="Centrer la carte">
+                  <i class="bi" data-search-icon aria-hidden="true"></i>
+                  <span class="search-item-text">
+                    <span class="search-item-name" data-search-name></span>
+                    <span class="search-item-detail" data-search-detail></span>
+                  </span>
+                </button>
+
+                <div class="search-item-actions">
+                  <button type="button" class="btn btn-sm search-add-btn" data-search-add>
+                    <i class="bi bi-plus-lg" aria-hidden="true"></i> Ajouter ce lieu
+                  </button>
+                  <button type="button" class="btn btn-sm" data-search-open hidden>
+                    <i class="bi bi-geo-alt-fill" aria-hidden="true"></i> Voir mon lieu
+                  </button>
+                  <span class="search-item-note" data-search-note hidden></span>
+                </div>
+
+                <!-- options d'ajout -->
+                <form class="search-add-form" data-search-add-form hidden>
+                  <label class="search-add-label">
+                    Type
+                    <select name="type" class="form-select form-select-sm">
+                      <option value="DEFAULT">Lieu</option>
+                      <option value="CITY">Ville</option>
+                      <option value="HIKE">Randonnée</option>
+                      <option value="ACTIVITY">Activité</option>
+                      <option value="VIEWPOINT">Point de vue</option>
+                    </select>
+                  </label>
+
+                  <div class="search-add-status" role="radiogroup" aria-label="Statut">
+                    <label><input type="radio" name="visited" value="false" checked> À visiter</label>
+                    <label><input type="radio" name="visited" value="true"> Visité</label>
+                  </div>
+
+                  <div class="data-actions">
+                    <button type="submit" class="btn btn-sm btn-primary">Ajouter</button>
+                    <button type="button" class="btn btn-sm" data-search-add-cancel>Annuler</button>
+                  </div>
+
+                  <p class="search-add-error" data-search-add-error hidden></p>
+                </form>
+              </li>
+            </template>
+          </div>
 
           <div class="filters-section">
 
@@ -304,6 +367,7 @@
   <script src="/js/map/leafletCountries.js"></script>
   <script src="/js/infoPanel.js"></script>
   <script src="/js/backup.js"></script>
+  <script src="/js/search.js"></script>
   <script src="/js/index.js"></script>
 </body>
 </html>

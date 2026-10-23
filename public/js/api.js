@@ -20,6 +20,14 @@
     return res.json()
   }
 
+    // -------- Géocodage --------
+  function searchPlaces(q, { limit, country } = {}) {
+    const params = new URLSearchParams({ q })
+    if (limit) params.set('limit', limit)
+    if (country) params.set('country', country)
+    return get(`/geocode/search?${params}`)
+  }
+
   const get = (path) => request(path)
   const post = (path, data) => request(path, { method: 'POST', body: data !== undefined ? JSON.stringify(data) : undefined })
   const put = (path, data) => request(path, { method: 'PUT', body: JSON.stringify(data) })
@@ -81,6 +89,6 @@
     listVlogs, getVlog, createVlog, updateVlog, deleteVlog,
     linkVlogToCountry, unlinkVlogFromCountry, setVlogCountries,
     listMedia, getMedia, createMedia, updateMedia, deleteMedia,
-    importBackup,
+    importBackup, searchPlaces,
   }
 })()
