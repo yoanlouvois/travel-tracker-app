@@ -1,1 +1,264 @@
-<header id="appHeader" class="app-header" data-page="countries"></header>
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lieu · Travel Map</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+
+<body>
+  <div class="app">
+
+    <!-- HEADER -->
+    <header class="app-header" data-page="places">
+      <div class="header-inner">
+
+        <!-- Gauche : Menu sur la carte, retour à la carte sur les autres pages -->
+        <div class="header-left">
+          <button id="btnMenu" class="btn btn-header" type="button" aria-label="Menu" title="Menu" data-header-map-only>
+            <i class="bi bi-list" aria-hidden="true"></i>
+            <span class="btn-label">Menu</span>
+          </button>
+          <a class="btn btn-header" href="/" aria-label="Carte" title="Carte" data-header-pages-only>
+            <i class="bi bi-map" aria-hidden="true"></i>
+            <span class="btn-label">Carte</span>
+          </a>
+        </div>
+
+        <!-- Centre : titre (lien vers la carte) -->
+        <a class="header-center" href="/">
+          <h1 class="app-title">
+            <i class="bi bi-globe-europe-africa app-title-icon" aria-hidden="true"></i>
+            <span>Travel Map</span>
+          </h1>
+          <p class="app-subtitle">Carnet de voyages</p>
+        </a>
+
+        <!-- Droite : pays, places, roadtrips, vlogs -->
+        <nav class="header-right" aria-label="Navigation principale">
+          <a class="btn btn-header" href="/country.html" data-nav="countries" aria-label="Mes pays" title="Mes pays">
+            <i class="bi bi-globe2" aria-hidden="true"></i>
+            <span class="btn-label">Mes pays</span>
+          </a>
+          <a class="btn btn-header" href="/place.html" data-nav="places" aria-label="Mes places" title="Mes places">
+            <i class="bi bi-geo-alt" aria-hidden="true"></i>
+            <span class="btn-label">Mes places</span>
+          </a>
+          <a class="btn btn-header" href="/roadtrip.html" data-nav="roadtrips" aria-label="Mes roadtrips" title="Mes roadtrips">
+            <i class="bi bi-signpost-2" aria-hidden="true"></i>
+            <span class="btn-label">Mes roadtrips</span>
+          </a>
+          <a class="btn btn-header" href="/vlogs.html" data-nav="vlogs" aria-label="Mes vlogs" title="Mes vlogs">
+            <i class="bi bi-camera-reels" aria-hidden="true"></i>
+            <span class="btn-label">Mes vlogs</span>
+          </a>
+        </nav>
+
+      </div>
+    </header>
+
+    <main class="page">
+      <div class="page-inner">
+
+        <p class="page-loading" data-page-loading>Chargement…</p>
+        <p class="page-error" data-page-error hidden></p>
+
+        <!-- Pas d'id dans l'URL -->
+        <section data-view="missing" hidden>
+          <div class="page-empty">
+            <p>Aucun lieu sélectionné.</p>
+            <p>Ouvre un lieu depuis la page d'un pays ou depuis la carte.</p>
+            <a class="page-empty-link" href="/country.html">
+              <i class="bi bi-globe2" aria-hidden="true"></i> Mes pays
+            </a>
+          </div>
+        </section>
+
+        <!-- =====================================================
+             LIEU : /place.html?id=...
+        ====================================================== -->
+        <section data-view="detail" hidden>
+          <a class="back-link" data-back-link href="/country.html">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+            <span data-back-label>Mes pays</span>
+          </a>
+
+          <!-- En-tête -->
+          <div class="place-head">
+            <span class="place-head-icon"><i data-type-icon aria-hidden="true"></i></span>
+            <div class="place-head-text">
+              <h2 class="page-title" data-field="name"></h2>
+              <p class="place-head-meta">
+                <span class="trip-chip" data-field="typeLabel"></span>
+                <a class="place-country" data-country-link>
+                  <img data-flag alt="">
+                  <span data-field="countryName"></span>
+                </a>
+                <span class="status-badge" data-status></span>
+              </p>
+            </div>
+          </div>
+
+          <div class="place-layout">
+
+            <!-- Infos modifiables -->
+            <section class="page-card place-info">
+              <h6>Informations</h6>
+
+              <form data-place-form novalidate>
+                <label>
+                  Nom
+                  <input type="text" name="name" required maxlength="200">
+                </label>
+
+                <label>
+                  Type
+                  <select name="type">
+                    <option value="DEFAULT">Lieu</option>
+                    <option value="CITY">Ville</option>
+                    <option value="HIKE">Randonnée</option>
+                    <option value="ACTIVITY">Activité</option>
+                    <option value="VIEWPOINT">Point de vue</option>
+                  </select>
+                </label>
+
+                <fieldset>
+                  <legend>Statut</legend>
+                  <label><input type="radio" name="visited" value="false"> À visiter</label>
+                  <label><input type="radio" name="visited" value="true"> Visité</label>
+                </fieldset>
+
+                <label data-visited-at-field hidden>
+                  Date de visite
+                  <input type="date" name="visitedAt">
+                </label>
+
+                <label>
+                  Description
+                  <textarea name="description" rows="5" placeholder="Souvenirs, conseils, infos pratiques…"></textarea>
+                </label>
+
+                <div class="coords-row">
+                  <label>
+                    Latitude
+                    <input type="number" name="lat" step="any" min="-90" max="90" required>
+                  </label>
+                  <label>
+                    Longitude
+                    <input type="number" name="lng" step="any" min="-180" max="180" required>
+                  </label>
+                </div>
+
+                <p data-place-error hidden></p>
+                <p data-place-saved hidden></p>
+
+                <button type="submit">Enregistrer</button>
+              </form>
+            </section>
+
+            <!-- Photos -->
+            <section class="page-card place-photos">
+              <div class="photos-head">
+                <h6>Photos <span class="section-count" data-field="photoCount"></span></h6>
+                <button type="button" class="btn-primary-soft" data-upload-open>
+                  <i class="bi bi-plus-lg" aria-hidden="true"></i> Ajouter
+                </button>
+              </div>
+
+              <!-- Ajout (interface seulement, envoi pas encore branché) -->
+              <div class="upload-panel" data-upload-panel hidden>
+                <label class="cover-drop">
+                  <input type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm" data-upload-input>
+                  <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+                  <span class="cover-drop-title">Choisir ou glisser des fichiers…</span>
+                  <span class="cover-drop-hint">Photos JPG, PNG, WebP · vidéos MP4, WebM · plusieurs à la fois</span>
+                </label>
+
+                <ul class="photo-grid" data-list="pending"></ul>
+
+                <p class="form-hint">
+                  L'envoi n'est pas encore branché : les fichiers sont seulement prévisualisés.
+                </p>
+                <p data-upload-message hidden></p>
+
+                <div class="btn-row">
+                  <button type="button" class="btn-primary-soft" data-upload-send disabled>
+                    Envoyer <span data-field="pendingCount"></span>
+                  </button>
+                  <button type="button" data-upload-cancel>Annuler</button>
+                </div>
+
+                <template data-item="pending">
+                  <li class="photo-tile is-pending">
+                    <img data-img alt="" hidden>
+                    <video data-video muted preload="metadata" hidden></video>
+                    <span class="photo-tag">À envoyer</span>
+                    <button type="button" class="photo-action" data-pending-remove aria-label="Retirer ce fichier">
+                      <i class="bi bi-x-lg" aria-hidden="true"></i>
+                    </button>
+                    <span class="photo-caption" data-field="filename"></span>
+                  </li>
+                </template>
+              </div>
+
+              <!-- Galerie -->
+              <ul class="photo-grid" data-list="photos"></ul>
+              <p class="page-empty" data-empty="photos" hidden>Aucune photo pour ce lieu.</p>
+              <p data-photos-message hidden></p>
+
+              <template data-item="photo">
+                <li class="photo-tile">
+                  <button type="button" class="photo-open" data-open aria-label="Agrandir">
+                    <img data-img alt="" hidden>
+                    <video data-video muted preload="metadata" hidden></video>
+                    <span class="photo-play" data-play hidden><i class="bi bi-play-fill" aria-hidden="true"></i></span>
+                  </button>
+                  <span class="photo-caption" data-field="caption"></span>
+                  <button type="button" class="photo-action" data-delete aria-label="Supprimer">
+                    <i class="bi bi-trash" aria-hidden="true"></i>
+                  </button>
+                  <div class="photo-confirm" data-confirm hidden>
+                    <span>Supprimer ?</span>
+                    <div class="photo-confirm-actions">
+                      <button type="button" class="photo-confirm-yes" data-confirm-yes>Supprimer</button>
+                      <button type="button" data-confirm-no>Annuler</button>
+                    </div>
+                  </div>
+                </li>
+              </template>
+            </section>
+
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Visionneuse plein écran -->
+  <dialog class="lightbox" data-lightbox aria-label="Photos du lieu">
+    <button type="button" class="lightbox-close" data-lightbox-close aria-label="Fermer">
+      <i class="bi bi-x-lg" aria-hidden="true"></i>
+    </button>
+    <button type="button" class="lightbox-nav lightbox-prev" data-lightbox-prev aria-label="Précédente">
+      <i class="bi bi-chevron-left" aria-hidden="true"></i>
+    </button>
+    <figure class="lightbox-figure">
+      <img data-lightbox-img alt="">
+      <video data-lightbox-video controls hidden></video>
+      <figcaption data-lightbox-caption></figcaption>
+    </figure>
+    <button type="button" class="lightbox-nav lightbox-next" data-lightbox-next aria-label="Suivante">
+      <i class="bi bi-chevron-right" aria-hidden="true"></i>
+    </button>
+    <span class="lightbox-counter" data-lightbox-counter></span>
+  </dialog>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/place.js"></script>
+</body>
+</html>
