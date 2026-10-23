@@ -1,7 +1,7 @@
 {
   "name": "travel-map",
   "productName": "Travel Map",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Carnet de voyages : pays, lieux, roadtrips et vlogs sur une carte",
   "author": "Travel Map",
   "private": true,
