@@ -19,18 +19,27 @@
 
     let detailedView = false
 
-    // Filtres (clés = types "front")
-    const filters = {
-      VISITED: true,
-      TO_VISIT: true,
+    // Filtres : deux critères indépendants
+    // - statut : visité / à visiter (champ visited, quel que soit le type)
+    // - type   : ville, randonnée, activité, point de vue (champ type en base)
+    // Un lieu est affiché si son statut ET son type sont cochés.
+    const statusFilters = {
+      visited: true,
+      toVisit: true,
+    }
+
+    const typeFilters = {
       CITY: true,
       HIKE: true,
       ACTIVITY: true,
       VIEWPOINT: true,
+      // DEFAULT n'a pas de case : seul son statut compte
     }
 
-    function isTypeVisible(type) {
-      return filters[type] !== false
+    function isPlaceVisible(data) {
+      const statusOk = data.visited ? statusFilters.visited : statusFilters.toVisit
+      const typeOk = typeFilters[data.apiType] !== false
+      return statusOk && typeOk
     }
 
     // =============================
@@ -148,7 +157,7 @@
 
     function applyFilters() {
       for (const entry of placesById.values()) {
-        if (isTypeVisible(entry.data.type)) showEntry(entry)
+        if (isPlaceVisible(entry.data)) showEntry(entry)
         else hideEntry(entry)
       }
     }
@@ -194,7 +203,7 @@
       const entry = { data, markerCompact, markerDetailed, pending: false }
       placesById.set(id, entry)
 
-      if (isTypeVisible(data.type)) showEntry(entry)
+      if (isPlaceVisible(data)) showEntry(entry)
       return entry
     }
 
@@ -285,7 +294,7 @@
         const updated = await window.Api.updatePlace(id, payload)
         entry.data = toFrontData(updated)
         refreshMarker(entry)
-        if (isTypeVisible(entry.data.type)) showEntry(entry)
+        if (isPlaceVisible(entry.data)) showEntry(entry)
         else hideEntry(entry)
         map.fire("place:updated", { placeId: id, data: entry.data })
         return entry
@@ -368,21 +377,25 @@
       setDetailedView(filterDetailed.checked)
     }
 
-    function bindFilter(checkbox, typeKey) {
+    // relie une case à cocher à une clé de filtre
+    function bindFilter(checkbox, filterGroup, key) {
       if (!checkbox) return
-      filters[typeKey] = checkbox.checked
+      filterGroup[key] = checkbox.checked
       checkbox.addEventListener("change", () => {
-        filters[typeKey] = checkbox.checked
+        filterGroup[key] = checkbox.checked
         applyFilters()
       })
     }
 
-    bindFilter(filterVisited, "VISITED")
-    bindFilter(filterToVisit, "TO_VISIT")
-    bindFilter(filterVille, "CITY")
-    bindFilter(filterRandonnee, "HIKE")
-    bindFilter(filterActivite, "ACTIVITY")
-    bindFilter(filterPointView, "VIEWPOINT")
+    // statut
+    bindFilter(filterVisited, statusFilters, "visited")
+    bindFilter(filterToVisit, statusFilters, "toVisit")
+
+    // type
+    bindFilter(filterVille, typeFilters, "CITY")
+    bindFilter(filterRandonnee, typeFilters, "HIKE")
+    bindFilter(filterActivite, typeFilters, "ACTIVITY")
+    bindFilter(filterPointView, typeFilters, "VIEWPOINT")
 
     // =============================
     // INIT
