@@ -5,6 +5,7 @@ const vlogsController = require('./controllers/vlogs.controller')
 const placesController = require('./controllers/places.controller')
 const tripsController = require('./controllers/trips.controller')
 const mediaController = require('./controllers/media.controller')
+const backupController = require('./controllers/backup.controller')
 
 const router = express.Router()
 
@@ -52,5 +53,9 @@ router.get('/media/:id', mediaController.getById)
 router.post('/media', mediaController.create)
 router.patch('/media/:id', mediaController.update)
 router.delete('/media/:id', mediaController.remove)
+
+// Backup 
+router.get('/backup/export', backupController.exportJson)
+router.post('/backup/import', backupController.importJson)
 
 module.exports = router

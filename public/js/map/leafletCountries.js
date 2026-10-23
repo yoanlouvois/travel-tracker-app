@@ -332,6 +332,7 @@
       getCountryStatus,
       setCountryStatus,
       buildCountryPanelPayload,
+      reload: loadCountriesFromApi,
     }
   }
 

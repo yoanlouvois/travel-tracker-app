@@ -70,6 +70,9 @@
   const updateMedia = (id, data) => patch(`/media/${id}`, data)
   const deleteMedia = (id) => del(`/media/${id}`)
 
+    // -------- Backup --------
+  const importBackup = (data) => post('/backup/import', data)
+
   window.Api = {
     listCountries, getCountry, createCountry, updateCountry, deleteCountry,
     listPlaces, getPlace, createPlace, updatePlace, deletePlace,
@@ -78,5 +81,6 @@
     listVlogs, getVlog, createVlog, updateVlog, deleteVlog,
     linkVlogToCountry, unlinkVlogFromCountry, setVlogCountries,
     listMedia, getMedia, createMedia, updateMedia, deleteMedia,
+    importBackup,
   }
 })()

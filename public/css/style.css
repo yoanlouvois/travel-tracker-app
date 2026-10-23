@@ -56,12 +56,22 @@
     overflow: hidden; /* évite le contenu visible quand fermé */
   }
   
-  .sidebar-inner{
+    .sidebar-inner{
     height: 100%;
+    box-sizing: border-box;      /* le padding est compté dans les 100 % */
     display: flex;
     flex-direction: column;
     padding: 12px;
     gap: 12px;
+    overflow-y: auto;            /* la sidebar défile si son contenu est trop long */
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #3a3a3a transparent;
+  }
+
+  /* les sections gardent leur taille au lieu d'être écrasées */
+  .sidebar-inner > * {
+    flex-shrink: 0;
   }
   
   /* Search "navbar" dans la sidebar */
@@ -2975,4 +2985,124 @@
   .map-wrap.info-panel-open{
     padding-right: 0;
   }
+}
+
+/* =========================
+   SIDEBAR : DONNÉES (import / export)
+========================= */
+
+.data-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.data-section .filters-title {
+  margin-bottom: 0;
+}
+
+.data-section [hidden] {
+  display: none !important;
+}
+
+/* fichier glissé au-dessus de la section */
+.data-section.is-dragover {
+  border-color: rgba(120,200,160,0.6);
+  background: rgba(120,200,160,0.06);
+}
+
+.data-section.is-busy {
+  cursor: progress;
+}
+
+.data-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.data-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.data-actions .btn {
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.data-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px dashed rgba(255,255,255,0.15);
+  background: #1c1c1c;
+}
+
+.data-preview-name {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* aperçu du fichier et rapport d'import */
+.data-report {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.78rem;
+}
+
+.data-report li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #ccc;
+}
+
+.data-report li strong {
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.data-report li span {
+  text-align: right;
+}
+
+.data-message {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: #1f1f1f;
+  color: #ccc;
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.data-message[data-type="success"] {
+  border-color: rgba(76,175,80,0.35);
+  background: rgba(76,175,80,0.12);
+  color: #a5d6a7;
+}
+
+.data-message[data-type="error"] {
+  border-color: rgba(224,90,90,0.35);
+  background: rgba(224,90,90,0.12);
+  color: #f3b4b4;
 }

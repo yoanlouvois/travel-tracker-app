@@ -172,6 +172,49 @@
           
           </div>
 
+          <!-- Données : import / export JSON (js/backup.js) -->
+          <div class="filters-section data-section" data-backup>
+
+            <h6 class="filters-title">
+              <i class="bi bi-database"></i>
+              Données
+            </h6>
+
+            <p class="data-hint">
+              Sauvegarde ta base en JSON, ou importe une sauvegarde :
+              seuls les éléments absents sont ajoutés.
+            </p>
+
+            <div class="data-actions">
+              <button type="button" class="btn btn-sm" data-backup-import>
+                <i class="bi bi-upload" aria-hidden="true"></i> Importer
+              </button>
+              <button type="button" class="btn btn-sm" data-backup-export>
+                <i class="bi bi-download" aria-hidden="true"></i> Exporter
+              </button>
+            </div>
+
+            <input type="file" accept="application/json,.json" data-backup-file hidden>
+
+            <!-- Aperçu du fichier avant import -->
+            <div class="data-preview" data-backup-preview hidden>
+              <p class="data-preview-name">
+                <i class="bi bi-filetype-json" aria-hidden="true"></i>
+                <span data-backup-filename></span>
+              </p>
+              <ul class="data-report" data-backup-preview-list></ul>
+              <div class="data-actions">
+                <button type="button" class="btn btn-sm btn-primary" data-backup-confirm>Importer</button>
+                <button type="button" class="btn btn-sm" data-backup-cancel>Annuler</button>
+              </div>
+            </div>
+
+            <!-- Résultat / erreurs -->
+            <p class="data-message" data-backup-message hidden></p>
+            <ul class="data-report" data-backup-report hidden></ul>
+
+          </div>
+
           <div class="mt-auto d-flex justify-content-end">
             <button id="btnCloseMenu" class="btn btn-outline-light btn-sm" type="button">
               Fermer
@@ -260,6 +303,7 @@
   <script src="/js/map/leafletRoadtrip.js"></script>
   <script src="/js/map/leafletCountries.js"></script>
   <script src="/js/infoPanel.js"></script>
+  <script src="/js/backup.js"></script>
   <script src="/js/index.js"></script>
 </body>
 </html>
