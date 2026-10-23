@@ -99,134 +99,145 @@
             </div>
           </div>
 
-          <div class="place-layout">
+          <!-- =====================================================
+               PHOTOS : bande horizontale, toute la largeur
+               (plusieurs visibles à la fois, défilement horizontal)
+          ====================================================== -->
+          <section class="page-card place-photos place-photos-strip">
+            <div class="photos-head">
+              <h6>Photos <span class="section-count" data-field="photoCount"></span></h6>
+              <button type="button" class="btn-primary-soft" data-upload-open>
+                <i class="bi bi-plus-lg" aria-hidden="true"></i> Ajouter
+              </button>
+            </div>
 
-            <!-- Infos modifiables -->
-            <section class="page-card place-info">
-              <h6>Informations</h6>
+            <!-- Ajout : choisir / glisser des fichiers, puis envoyer -->
+            <div class="upload-panel" data-upload-panel hidden>
+              <label class="cover-drop">
+                <input type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm" data-upload-input>
+                <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+                <span class="cover-drop-title">Choisir ou glisser des fichiers…</span>
+                <span class="cover-drop-hint">Photos JPG, PNG, WebP (20 Mo max) · vidéos MP4, WebM (500 Mo max) · 30 fichiers max par envoi</span>
+              </label>
 
-              <form data-place-form novalidate>
-                <label>
-                  Nom
-                  <input type="text" name="name" required maxlength="200">
-                </label>
+              <ul class="photo-grid" data-list="pending"></ul>
 
-                <label>
-                  Type
-                  <select name="type">
-                    <option value="DEFAULT">Lieu</option>
-                    <option value="CITY">Ville</option>
-                    <option value="HIKE">Randonnée</option>
-                    <option value="ACTIVITY">Activité</option>
-                    <option value="VIEWPOINT">Point de vue</option>
-                  </select>
-                </label>
+              <progress class="upload-progress" max="100" value="0" data-upload-progress hidden></progress>
+              <p data-upload-message hidden></p>
 
-                <fieldset>
-                  <legend>Statut</legend>
-                  <label><input type="radio" name="visited" value="false"> À visiter</label>
-                  <label><input type="radio" name="visited" value="true"> Visité</label>
-                </fieldset>
-
-                <label data-visited-at-field hidden>
-                  Date de visite
-                  <input type="date" name="visitedAt">
-                </label>
-
-                <label>
-                  Description
-                  <textarea name="description" rows="5" placeholder="Souvenirs, conseils, infos pratiques…"></textarea>
-                </label>
-
-                <div class="coords-row">
-                  <label>
-                    Latitude
-                    <input type="number" name="lat" step="any" min="-90" max="90" required>
-                  </label>
-                  <label>
-                    Longitude
-                    <input type="number" name="lng" step="any" min="-180" max="180" required>
-                  </label>
-                </div>
-
-                <p data-place-error hidden></p>
-                <p data-place-saved hidden></p>
-
-                <button type="submit">Enregistrer</button>
-              </form>
-            </section>
-
-            <!-- Photos -->
-            <section class="page-card place-photos">
-              <div class="photos-head">
-                <h6>Photos <span class="section-count" data-field="photoCount"></span></h6>
-                <button type="button" class="btn-primary-soft" data-upload-open>
-                  <i class="bi bi-plus-lg" aria-hidden="true"></i> Ajouter
+              <div class="btn-row">
+                <button type="button" class="btn-primary-soft" data-upload-send disabled>
+                  Envoyer <span data-field="pendingCount"></span>
                 </button>
+                <button type="button" data-upload-cancel>Annuler</button>
               </div>
 
-              <!-- Ajout : choisir / glisser des fichiers, puis envoyer -->
-              <div class="upload-panel" data-upload-panel hidden>
-                <label class="cover-drop">
-                  <input type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm" data-upload-input>
-                  <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
-                  <span class="cover-drop-title">Choisir ou glisser des fichiers…</span>
-                  <span class="cover-drop-hint">Photos JPG, PNG, WebP (20 Mo max) · vidéos MP4, WebM (500 Mo max) · 30 fichiers max par envoi</span>
-                </label>
-
-                <ul class="photo-grid" data-list="pending"></ul>
-
-                <progress class="upload-progress" max="100" value="0" data-upload-progress hidden></progress>
-                <p data-upload-message hidden></p>
-
-                <div class="btn-row">
-                  <button type="button" class="btn-primary-soft" data-upload-send disabled>
-                    Envoyer <span data-field="pendingCount"></span>
+              <template data-item="pending">
+                <li class="photo-tile is-pending">
+                  <img data-img alt="" hidden>
+                  <video data-video muted preload="metadata" hidden></video>
+                  <span class="photo-tag">À envoyer</span>
+                  <button type="button" class="photo-action" data-pending-remove aria-label="Retirer ce fichier">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
                   </button>
-                  <button type="button" data-upload-cancel>Annuler</button>
-                </div>
-
-                <template data-item="pending">
-                  <li class="photo-tile is-pending">
-                    <img data-img alt="" hidden>
-                    <video data-video muted preload="metadata" hidden></video>
-                    <span class="photo-tag">À envoyer</span>
-                    <button type="button" class="photo-action" data-pending-remove aria-label="Retirer ce fichier">
-                      <i class="bi bi-x-lg" aria-hidden="true"></i>
-                    </button>
-                    <span class="photo-caption" data-field="filename"></span>
-                  </li>
-                </template>
-              </div>
-
-              <!-- Galerie -->
-              <ul class="photo-grid" data-list="photos"></ul>
-              <p class="page-empty" data-empty="photos" hidden>Aucune photo pour ce lieu.</p>
-              <p data-photos-message hidden></p>
-
-              <template data-item="photo">
-                <li class="photo-tile">
-                  <button type="button" class="photo-open" data-open aria-label="Agrandir">
-                    <img data-img alt="" hidden>
-                    <video data-video muted preload="metadata" hidden></video>
-                    <span class="photo-play" data-play hidden><i class="bi bi-play-fill" aria-hidden="true"></i></span>
-                  </button>
-                  <span class="photo-caption" data-field="caption"></span>
-                  <button type="button" class="photo-action" data-delete aria-label="Supprimer">
-                    <i class="bi bi-trash" aria-hidden="true"></i>
-                  </button>
-                  <div class="photo-confirm" data-confirm hidden>
-                    <span>Supprimer ?</span>
-                    <div class="photo-confirm-actions">
-                      <button type="button" class="photo-confirm-yes" data-confirm-yes>Supprimer</button>
-                      <button type="button" data-confirm-no>Annuler</button>
-                    </div>
-                  </div>
+                  <span class="photo-caption" data-field="filename"></span>
                 </li>
               </template>
-            </section>
+            </div>
 
-          </div>
+            <!-- Galerie : bande qui défile horizontalement -->
+            <div class="photo-strip-wrap">
+              <ul class="photo-strip" data-list="photos"></ul>
+
+              <button type="button" class="strip-nav strip-prev" data-strip-prev aria-label="Photos précédentes" hidden>
+                <i class="bi bi-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="strip-nav strip-next" data-strip-next aria-label="Photos suivantes" hidden>
+                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            <p class="page-empty" data-empty="photos" hidden>Aucune photo pour ce lieu.</p>
+            <p data-photos-message hidden></p>
+
+            <template data-item="photo">
+              <li class="photo-tile">
+                <button type="button" class="photo-open" data-open aria-label="Agrandir">
+                  <img data-img alt="" hidden>
+                  <video data-video muted preload="metadata" hidden></video>
+                  <span class="photo-play" data-play hidden><i class="bi bi-play-fill" aria-hidden="true"></i></span>
+                </button>
+                <span class="photo-caption" data-field="caption"></span>
+                <button type="button" class="photo-action" data-delete aria-label="Supprimer">
+                  <i class="bi bi-trash" aria-hidden="true"></i>
+                </button>
+                <div class="photo-confirm" data-confirm hidden>
+                  <span>Supprimer ?</span>
+                  <div class="photo-confirm-actions">
+                    <button type="button" class="photo-confirm-yes" data-confirm-yes>Supprimer</button>
+                    <button type="button" data-confirm-no>Annuler</button>
+                  </div>
+                </div>
+              </li>
+            </template>
+          </section>
+
+          <!-- =====================================================
+               INFOS MODIFIABLES (en dessous, toute la largeur)
+          ====================================================== -->
+          <section class="page-card place-info">
+            <h6>Informations</h6>
+
+            <form data-place-form novalidate>
+              <label>
+                Nom
+                <input type="text" name="name" required maxlength="200">
+              </label>
+
+              <label>
+                Type
+                <select name="type">
+                  <option value="DEFAULT">Lieu</option>
+                  <option value="CITY">Ville</option>
+                  <option value="HIKE">Randonnée</option>
+                  <option value="ACTIVITY">Activité</option>
+                  <option value="VIEWPOINT">Point de vue</option>
+                </select>
+              </label>
+
+              <fieldset>
+                <legend>Statut</legend>
+                <label><input type="radio" name="visited" value="false"> À visiter</label>
+                <label><input type="radio" name="visited" value="true"> Visité</label>
+              </fieldset>
+
+              <label data-visited-at-field hidden>
+                Date de visite
+                <input type="date" name="visitedAt">
+              </label>
+
+              <label class="place-info-wide">
+                Description
+                <textarea name="description" rows="5" placeholder="Souvenirs, conseils, infos pratiques…"></textarea>
+              </label>
+
+              <div class="coords-row place-info-wide">
+                <label>
+                  Latitude
+                  <input type="number" name="lat" step="any" min="-90" max="90" required>
+                </label>
+                <label>
+                  Longitude
+                  <input type="number" name="lng" step="any" min="-180" max="180" required>
+                </label>
+              </div>
+
+              <p class="place-info-wide" data-place-error hidden></p>
+              <p class="place-info-wide" data-place-saved hidden></p>
+
+              <button type="submit">Enregistrer</button>
+            </form>
+          </section>
         </section>
 
       </div>

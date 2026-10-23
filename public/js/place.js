@@ -281,6 +281,39 @@
   function setupGallery(media, lightbox) {
     const messageEl = view.querySelector('[data-photos-message]')
     const list = view.querySelector('[data-list="photos"]')
+    const prevBtn = view.querySelector('[data-strip-prev]')
+    const nextBtn = view.querySelector('[data-strip-next]')
+
+    // ---- bande horizontale : flèches + molette ----
+    function updateArrows() {
+      const max = list.scrollWidth - list.clientWidth
+      const scrollable = !list.hidden && max > 1
+      prevBtn.hidden = !scrollable
+      nextBtn.hidden = !scrollable
+      prevBtn.disabled = list.scrollLeft <= 1
+      nextBtn.disabled = list.scrollLeft >= max - 1
+    }
+
+    // une "page" = presque toute la largeur visible
+    function scrollPage(dir) {
+      list.scrollBy({ left: dir * list.clientWidth * 0.9, behavior: 'smooth' })
+    }
+
+    prevBtn.addEventListener('click', () => scrollPage(-1))
+    nextBtn.addEventListener('click', () => scrollPage(1))
+    list.addEventListener('scroll', updateArrows, { passive: true })
+    window.addEventListener('resize', updateArrows)
+
+    // molette verticale au-dessus de la bande -> défilement horizontal
+    // (aux extrémités, on laisse la page défiler normalement)
+    list.addEventListener('wheel', (e) => {
+      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return
+      const max = list.scrollWidth - list.clientWidth
+      if (max <= 1) return
+      if ((e.deltaY < 0 && list.scrollLeft <= 0) || (e.deltaY > 0 && list.scrollLeft >= max - 1)) return
+      e.preventDefault()
+      list.scrollLeft += e.deltaY
+    }, { passive: false })
 
     function render() {
       setField(view, 'photoCount', media.length)
@@ -293,6 +326,10 @@
         setField(node, 'caption', m.caption || '')
         node.querySelector('[data-field="caption"]').hidden = !m.caption
       })
+
+      // peu de photos : elles se partagent toute la largeur (voir .photo-strip en CSS)
+      list.style.setProperty('--count', Math.max(media.length, 1))
+      requestAnimationFrame(updateArrows) // après affichage de la page
     }
 
     function closeConfirms(except) {

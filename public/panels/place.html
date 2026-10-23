@@ -1,5 +1,27 @@
 <!-- public/panels/place.html : contenu du panneau d'info d'un lieu -->
 
+<!-- Nom du lieu -->
+<header data-place-head>
+  <h5 data-field="name"></h5>
+</header>
+
+<!-- Photos / vidéos : carrousel horizontal, toute la largeur -->
+<section data-place-gallery>
+  <div data-carousel>
+    <ul data-list="media"></ul>
+
+    <button type="button" data-carousel-prev aria-label="Photo précédente" hidden>
+      <i class="bi bi-chevron-left" aria-hidden="true"></i>
+    </button>
+    <button type="button" data-carousel-next aria-label="Photo suivante" hidden>
+      <i class="bi bi-chevron-right" aria-hidden="true"></i>
+    </button>
+    <span data-carousel-counter hidden></span>
+  </div>
+
+  <p data-empty="media" hidden>Aucune photo. Ajoute-en depuis la fiche du lieu.</p>
+</section>
+
 <form data-place-form>
   <label>
     Nom
@@ -42,22 +64,16 @@
   <button type="submit">Enregistrer</button>
 </form>
 
-<section>
-  <h6>Photos</h6>
-  <ul data-list="media"></ul>
-  <p data-empty="media" hidden>Aucune photo.</p>
-</section>
-
 <!-- lien vers /place.html?id=... (rempli par infoPanel.js) -->
 <a data-page-link hidden>Voir la fiche du lieu</a>
 
 <button type="button" data-place-delete>Supprimer ce lieu</button>
 
-<!-- modèle d'un média -->
+<!-- modèle d'un média (une diapo du carrousel) -->
 <template data-item="media">
   <li>
     <img data-media-img alt="" hidden>
-    <video data-media-video controls hidden></video>
+    <video data-media-video controls preload="metadata" hidden></video>
     <span data-field="caption"></span>
   </li>
 </template>

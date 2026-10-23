@@ -178,9 +178,12 @@
       if (field) field.hidden = !visited
     }
 
-    function renderPlacePanel(data = {}) {
+        function renderPlacePanel(data = {}) {
       const root = clonePanel('place')
       if (!root) return null
+
+      // nom en haut du panneau
+      setField(root, 'name', data.name ?? data.label ?? '')
 
       // formulaire
       const form = root.querySelector('[data-place-form]')
@@ -216,8 +219,11 @@
           : '-'
       )
 
-      // photos / vidéos
-      const media = [...(data.media || [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+      // photos / vidéos (carrousel)
+      const media = [...(data.media || [])]
+        .filter((m) => m.filePath)
+        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+
       fillList(root, 'media', 'media', media, (node, m) => {
         const img = node.querySelector('[data-media-img]')
         const video = node.querySelector('[data-media-video]')
@@ -227,12 +233,20 @@
           video.hidden = false
         } else if (img) {
           img.src = m.filePath
-          img.alt = m.caption || ''
+          img.alt = m.caption || data.name || data.label || ''
           img.hidden = false
         }
 
+        const caption = node.querySelector('[data-field="caption"]')
         setField(node, 'caption', m.caption || '')
+        if (caption) caption.hidden = !m.caption
       })
+
+      const carousel = root.querySelector('[data-carousel]')
+      if (carousel) {
+        carousel.hidden = media.length === 0
+        updateCarousel(carousel)
+      }
 
       // suppression
       const del = root.querySelector('[data-place-delete]')
@@ -247,6 +261,52 @@
 
       return root
     }
+
+    // =============================
+    // CARROUSEL PHOTOS (panneau lieu)
+    // =============================
+    // met à jour compteur + flèches selon la diapo visible,
+    // et met en pause les vidéos qui ne sont plus à l'écran
+    function updateCarousel(carousel) {
+      const track = carousel.querySelector('[data-list="media"]')
+      const prev = carousel.querySelector('[data-carousel-prev]')
+      const next = carousel.querySelector('[data-carousel-next]')
+      const counter = carousel.querySelector('[data-carousel-counter]')
+      if (!track) return
+
+      const count = track.children.length
+      const width = track.clientWidth
+      const index = width ? Math.round(track.scrollLeft / width) : 0
+      const multi = count > 1
+
+      if (prev) { prev.hidden = !multi; prev.disabled = index <= 0 }
+      if (next) { next.hidden = !multi; next.disabled = index >= count - 1 }
+      if (counter) {
+        counter.hidden = !multi
+        counter.textContent = `${index + 1} / ${count}`
+      }
+
+      ;[...track.children].forEach((li, i) => {
+        if (i !== index) li.querySelector('video')?.pause()
+      })
+    }
+
+    // flèches : une diapo à la fois
+    infoPanelContent.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-carousel-prev], [data-carousel-next]')
+      if (!btn) return
+      const track = btn.closest('[data-carousel]')?.querySelector('[data-list="media"]')
+      if (!track) return
+      const dir = btn.matches('[data-carousel-next]') ? 1 : -1
+      track.scrollBy({ left: dir * track.clientWidth, behavior: 'smooth' })
+    })
+
+    // défilement (flèches, trackpad, Maj + molette, glisser) → compteur à jour
+    // "scroll" ne remonte pas : écoute en phase de capture
+    infoPanelContent.addEventListener('scroll', (e) => {
+      if (!(e.target instanceof Element) || !e.target.matches('[data-carousel] [data-list="media"]')) return
+      updateCarousel(e.target.closest('[data-carousel]'))
+    }, true)
 
     // =============================
     // RENDU : ROADTRIP

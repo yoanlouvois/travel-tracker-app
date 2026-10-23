@@ -942,35 +942,126 @@
   font-weight: 600;
 }
 
-/* photos / vidéos d'un lieu : grille 2 colonnes */
-:is(.info-panel-content, .page-card) [data-list="media"]{
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+/* ----- Lieu : nom en haut ----- */
+.info-panel-content [data-place-head] h5{
   margin: 0;
-  padding: 0;
-  list-style: none;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
-:is(.info-panel-content, .page-card) [data-list="media"] li{
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+/* ----- Lieu : carrousel photos / vidéos ----- */
+.info-panel-content [data-place-gallery]{
+  gap: 6px;
+  padding-top: 0;
+  border-top: none; /* pas de séparateur juste sous le nom */
 }
 
-:is(.info-panel-content, .page-card) [data-list="media"] img,
-:is(.info-panel-content, .page-card) [data-list="media"] video{
-  width: 100%;
-  aspect-ratio: 1;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid var(--border-soft);
+.info-panel-content [data-carousel]{
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
   background: #111;
 }
 
-:is(.info-panel-content, .page-card) [data-list="media"] [data-field="caption"]{
-  color: var(--muted);
-  font-size: 0.75rem;
+.info-panel-content [data-carousel] [data-list="media"]{
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none; /* défilement par flèches / trackpad / glisser */
+}
+.info-panel-content [data-carousel] [data-list="media"]::-webkit-scrollbar{
+  display: none;
+}
+
+.info-panel-content [data-carousel] [data-list="media"] li{
+  position: relative;
+  flex: 0 0 100%;
+  aspect-ratio: 4 / 3;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.info-panel-content [data-carousel] [data-list="media"] img,
+.info-panel-content [data-carousel] [data-list="media"] video{
+  display: block;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  border: none;
+  border-radius: 0;
+  object-fit: cover;
+  background: #111;
+}
+.info-panel-content [data-carousel] [data-list="media"] video{
+  object-fit: contain;
+}
+
+/* légende en bas de la photo */
+.info-panel-content [data-carousel] [data-field="caption"]{
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 18px 10px 8px;
+  color: #fff;
+  font-size: 0.78rem;
+  background: linear-gradient(transparent, rgba(0,0,0,0.7));
+  pointer-events: none;
+}
+/* sur une vidéo, la légende cacherait les contrôles */
+.info-panel-content [data-carousel] li:has(video:not([hidden])) [data-field="caption"]{
+  display: none;
+}
+
+/* flèches */
+.info-panel-content [data-carousel-prev],
+.info-panel-content [data-carousel-next]{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(0,0,0,0.5);
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.info-panel-content [data-carousel-prev]{ left: 8px; }
+.info-panel-content [data-carousel-next]{ right: 8px; }
+.info-panel-content [data-carousel-prev]:hover:not(:disabled),
+.info-panel-content [data-carousel-next]:hover:not(:disabled){
+  background: rgba(0,0,0,0.75);
+}
+.info-panel-content [data-carousel-prev]:disabled,
+.info-panel-content [data-carousel-next]:disabled{
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* compteur 2 / 5 */
+.info-panel-content [data-carousel-counter]{
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  background: rgba(0,0,0,0.55);
+  pointer-events: none;
 }
 
 /* =========================
@@ -989,10 +1080,12 @@
   scrollbar-color: var(--surface-3) transparent;
 }
 
+/* largeur des pages : presque tout l'écran, avec des marges qui
+   grandissent avec la fenêtre (et une limite sur très grand écran) */
 .page-inner {
-  max-width: 1100px;
+  max-width: 1680px;
   margin: 0 auto;
-  padding: 28px 24px 56px;
+  padding: 28px clamp(16px, 4vw, 64px) 56px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -1133,6 +1226,22 @@
 
 .page-card .btn-primary-soft:hover:not(:disabled) {
   background: #555;
+}
+
+/* bouton de suppression dans une carte (ex : retirer la couverture) */
+.page-card .btn-danger-soft {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #3a1f1f;
+  border-color: rgba(255,80,80,0.4);
+  color: #f3b4b4;
+}
+
+.page-card .btn-danger-soft:hover:not(:disabled) {
+  background: #5a2a2a;
+  border-color: rgba(255,100,100,0.7);
+  color: #fff;
 }
 
 .page-card [data-country-status-saved] {
@@ -1628,10 +1737,9 @@
 ========================= */
 
 .trip-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-width: 720px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr));
+  gap: 10px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -1823,7 +1931,7 @@
 
 .stop-card {
   display: grid;
-  grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 520px) minmax(0, 1fr);
   border-radius: 14px;
   border: 1px solid var(--border-soft);
   background: var(--sidebar-bg);
@@ -2191,14 +2299,6 @@
   object-fit: cover;
 }
 
-/* ----- disposition : infos | photos ----- */
-.place-layout {
-  display: grid;
-  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
-  align-items: start;
-  gap: 16px;
-}
-
 .coords-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2266,6 +2366,25 @@
   gap: 12px;
   padding-bottom: 14px;
   border-bottom: 1px solid var(--border-soft);
+}
+
+/* barre de progression des envois (photos d'un lieu, couverture d'un pays) */
+.upload-progress {
+  width: 100%;
+  height: 0.5rem;
+  accent-color: var(--accent);
+}
+
+/* zone de dépôt bloquée pendant un envoi */
+.cover-drop.is-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* vignette en cours de suppression */
+.photo-tile.is-busy {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .page-card [data-upload-message],
@@ -2473,6 +2592,113 @@
   text-transform: uppercase;
 }
 
+/* ----- disposition : photos (bande horizontale) puis infos ----- */
+
+/* ----- bande de photos ----- */
+.photo-strip-wrap {
+  position: relative;
+}
+
+.photo-strip {
+  --per-view: 4;   /* photos visibles en même temps (selon la largeur, voir plus bas) */
+  --gap: 10px;
+  /* moins de photos que --per-view : elles se partagent toute la largeur */
+  --n: min(var(--count, var(--per-view)), var(--per-view));
+
+  display: flex;
+  gap: var(--gap);
+  margin: 0;
+  padding: 0 0 6px;
+  list-style: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-3, #3a3a3a) transparent;
+}
+
+.photo-strip > .photo-tile {
+  flex: 0 0 calc((100% - (var(--n) - 1) * var(--gap)) / var(--n));
+  height: clamp(180px, 32vh, 340px);
+  aspect-ratio: auto;          /* annule le carré de .photo-tile */
+  box-sizing: border-box;      /* la bordure ne doit pas dépasser la largeur */
+  scroll-snap-align: start;
+}
+
+/* ----- flèches ----- */
+.page-card .strip-nav {
+  position: absolute;
+  top: calc(50% - 3px);        /* -3px : moitié du padding bas de la bande */
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(0,0,0,0.6);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.page-card .strip-prev { left: 8px; }
+.page-card .strip-next { right: 8px; }
+
+.page-card .strip-nav:hover:not(:disabled) {
+  background: rgba(0,0,0,0.85);
+}
+
+.page-card .strip-nav:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ----- infos : 2 colonnes sur grand écran ----- */
+.place-info {
+  max-width: none;
+}
+
+@media (min-width: 901px) {
+  .page-card.place-info form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+    align-items: start;
+  }
+
+  .page-card.place-info .place-info-wide {
+    grid-column: 1 / -1;
+  }
+
+  .page-card.place-info form > button[type="submit"] {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+/* ----- largeur : nombre de photos visibles ----- */
+@media (min-width: 1500px) {
+  .photo-strip { --per-view: 5; }
+}
+
+@media (max-width: 1100px) {
+  .photo-strip { --per-view: 3; }
+}
+
+@media (max-width: 700px) {
+  .photo-strip { --per-view: 2; }
+  .photo-strip > .photo-tile { height: 200px; }
+}
+
+@media (max-width: 450px) {
+  .photo-strip { --per-view: 1.3; } /* on devine la photo suivante */
+}
+
 /* ----- visionneuse ----- */
 .lightbox {
   width: 100vw;
@@ -2579,13 +2805,6 @@
   background: rgba(30,30,30,0.7);
   font-size: 0.8rem;
   font-variant-numeric: tabular-nums;
-}
-
-/* écrans moyens : photos sous les infos */
-@media (max-width: 900px) {
-  .place-layout {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 600px) {
