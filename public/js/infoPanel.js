@@ -3,7 +3,8 @@
 // (public/panels/*.html), rendu, et interactions (statut pays, édition et
 // suppression de lieu).
 //
-// Dépend de : window.PlacesApi (leafletPlaces.js), window.CountriesApi (leafletCountries.js)
+// Dépend de : window.PlacesApi (leafletPlaces.js), window.CountriesApi (leafletCountries.js),
+//             window.RoadtripsApi (leafletRoadtrip.js), window.ToolManager (map/toolManager.js)
 // Expose   : window.initInfoPanel(map) -> { show, close }
 
 (function () {
@@ -178,7 +179,7 @@
       if (field) field.hidden = !visited
     }
 
-        function renderPlacePanel(data = {}) {
+    function renderPlacePanel(data = {}) {
       const root = clonePanel('place')
       if (!root) return null
 
@@ -312,6 +313,15 @@
     // RENDU : ROADTRIP
     // =============================
     const BUILDING_KEY = '__building__' // clé du panneau "roadtrip en cours"
+    const TOOL_ROADTRIP = 'addRoadtrip'   // même nom que dans leafletRoadtrip.js
+
+    // quitte l'outil roadtrip s'il est actif (bouton de la barre d'outils désactivé,
+    // curseur normal, zoom au double-clic réactivé : géré par leafletRoadtrip.js)
+    function exitRoadtripTool() {
+      if (window.ToolManager?.getActiveTool?.() === TOOL_ROADTRIP) {
+        window.ToolManager.setActiveTool(null)
+      }
+    }
 
     function fillSteps(root, listName, steps) {
       fillList(root, listName, 'step', steps, (node, step) => {
@@ -706,7 +716,14 @@
       if (finishBtn) {
         finishBtn.disabled = true
         const created = await window.RoadtripsApi?.finishBuilding?.()
-        if (!created && window.RoadtripsApi?.getBuildingPayload?.()) {
+
+        // enregistré : on quitte l'outil (le panneau passe sur le roadtrip créé)
+        if (created) {
+          exitRoadtripTool()
+          return
+        }
+
+        if (window.RoadtripsApi?.getBuildingPayload?.()) {
           // échec : le brouillon est toujours là
           finishBtn.disabled = false
           showMessage(
@@ -717,9 +734,10 @@
         return
       }
 
-      // annuler le brouillon
+      // annuler le brouillon : on quitte aussi l'outil
       if (e.target.closest('[data-roadtrip-cancel]')) {
         window.RoadtripsApi?.cancelBuilding?.()
+        exitRoadtripTool()
         return
       }
 

@@ -3707,3 +3707,19 @@
   line-height: 1;
   vertical-align: 0; /* annule le petit décalage vers le bas de Bootstrap Icons */
 }
+
+/* panneau d'info ouvert : la barre d'outils se décale à sa gauche */
+.map-toolbar {
+  transition: right 180ms ease;
+}
+
+.map-wrap.info-panel-open .map-toolbar {
+  right: calc(var(--panel-width) + 20px);
+}
+
+/* petit écran : le panneau prend toute la largeur, la barre reste en place */
+@media (max-width: 600px) {
+  .map-wrap.info-panel-open .map-toolbar {
+    right: 20px;
+  }
+}
