@@ -121,6 +121,11 @@
           </div>
 
           <!-- Étapes dans l'ordre -->
+          <p class="stops-hint" data-stops-hint hidden>
+            <i class="bi bi-info-circle" aria-hidden="true"></i>
+            Un roadtrip garde au moins 2 étapes. Pour aller plus loin, supprime le roadtrip depuis la carte.
+          </p>
+
           <ol class="stops" data-list="stops"></ol>
           <p class="page-empty" data-empty="stops" hidden>Ce roadtrip n'a aucune étape.</p>
 
@@ -160,9 +165,26 @@
                     <span data-field="details"></span>
                   </p>
                   <p class="stop-description" data-field="description"></p>
-                  <a class="stop-link" data-place-link>
-                    Voir le lieu <i class="bi bi-arrow-right" aria-hidden="true"></i>
-                  </a>
+
+                  <!-- Actions : voir le lieu / retirer l'étape (le lieu est conservé) -->
+                  <div class="stop-actions">
+                    <a class="stop-link" data-place-link>
+                      Voir le lieu <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                    </a>
+                    <button type="button" class="stop-remove" data-stop-remove>
+                      <i class="bi bi-x-circle" aria-hidden="true"></i> Retirer l'étape
+                    </button>
+                  </div>
+
+                  <div class="stop-confirm" data-stop-confirm hidden>
+                    <span>Retirer cette étape du roadtrip ? Le lieu reste sur la carte.</span>
+                    <div class="stop-confirm-actions">
+                      <button type="button" class="stop-confirm-yes" data-stop-confirm-yes>Retirer</button>
+                      <button type="button" class="stop-confirm-no" data-stop-confirm-no>Annuler</button>
+                    </div>
+                  </div>
+
+                  <p class="stop-error" data-stop-error hidden></p>
                 </div>
               </article>
             </li>

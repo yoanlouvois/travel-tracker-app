@@ -3,6 +3,8 @@
 // /roadtrip.html?id=...   -> étapes dans l'ordre, avec dates et photos défilantes
 //
 // Dépend de : window.Api (api.js)
+// Retirer une étape : DELETE /api/trips/stops/:id -> supprime le TripStop seulement,
+//                     le lieu (Place) est conservé. Minimum 2 étapes par roadtrip.
 // Dates : TripStop n'a pas de date -> dates du roadtrip en haut,
 //         date de visite du lieu (Place.visitedAt) sur chaque étape.
 
@@ -17,6 +19,9 @@
     ACTIVITY: 'Activité',
     VIEWPOINT: 'Point de vue',
   }
+
+  // un roadtrip a besoin d'au moins 2 étapes pour avoir un tracé
+  const MIN_STOPS = 2
 
   // =============================
   // HELPERS
@@ -54,6 +59,17 @@
     if (!el) return
     el.textContent = text || ''
     el.hidden = !text
+  }
+
+  // Message d'erreur renvoyé par l'API ({ error: "..." }), sinon le message par défaut
+  function apiErrorMessage(err, fallback) {
+    try {
+      const data = JSON.parse(err?.message)
+      if (data?.error) return data.error
+    } catch {
+      // pas du JSON : erreur réseau, etc.
+    }
+    return fallback
   }
 
   function plural(count, singular, pluralForm) {
@@ -152,6 +168,7 @@
       const place = stop.placeId ? placesById.get(stop.placeId) : null
       const title = place?.name || stop.title || `Étape ${i + 1}`
 
+      node.dataset.stopId = stop.id
       setField(node, 'index', i + 1)
       setField(node, 'title', title)
 
@@ -176,7 +193,91 @@
       return () => setupCarousel(node.querySelector('[data-carousel]'), photosOf(place), title)
     })
 
+    setupStopRemoval()
     showView(detailView)
+  }
+
+  // =============================
+  // RETIRER UNE ÉTAPE
+  // =============================
+  // Le TripStop est supprimé, le lieu reste. Le serveur renumérote les étapes
+  // suivantes ; ici on retire la carte de l'étape et on renumérote l'affichage
+  // (les carrousels des autres étapes ne sont pas reconstruits).
+  function setupStopRemoval() {
+    const list = detailView.querySelector('[data-list="stops"]')
+    const hint = detailView.querySelector('[data-stops-hint]')
+
+    function closeConfirms(except) {
+      list.querySelectorAll('[data-stop-confirm]').forEach((box) => {
+        if (box !== except) box.hidden = true
+      })
+    }
+
+    // numéros, compteur, et blocage sous le minimum d'étapes
+    function refresh() {
+      const items = [...list.children]
+      const canRemove = items.length > MIN_STOPS
+
+      items.forEach((li, i) => {
+        setField(li, 'index', i + 1)
+        const btn = li.querySelector('[data-stop-remove]')
+        btn.disabled = !canRemove
+        btn.title = canRemove ? '' : `Un roadtrip garde au moins ${MIN_STOPS} étapes`
+      })
+
+      setField(detailView, 'stepCount', plural(items.length, 'étape'))
+      if (hint) hint.hidden = canRemove || items.length === 0
+    }
+
+    function setBusy(li, busy) {
+      li.classList.toggle('is-busy', busy)
+      li.querySelectorAll('[data-stop-confirm] button').forEach((b) => { b.disabled = busy })
+    }
+
+    list.addEventListener('click', async (e) => {
+      const li = e.target.closest('.stop')
+      if (!li || li.classList.contains('is-busy')) return
+
+      const confirmBox = li.querySelector('[data-stop-confirm]')
+      const errorEl = li.querySelector('[data-stop-error]')
+
+      // demander confirmation
+      if (e.target.closest('[data-stop-remove]')) {
+        closeConfirms(confirmBox)
+        showMessage(errorEl, null)
+        confirmBox.hidden = !confirmBox.hidden
+        return
+      }
+
+      if (e.target.closest('[data-stop-confirm-no]')) {
+        confirmBox.hidden = true
+        return
+      }
+
+      // confirmer
+      if (e.target.closest('[data-stop-confirm-yes]')) {
+        setBusy(li, true)
+        showMessage(errorEl, null)
+
+        try {
+          await Api.deleteTripStop(li.dataset.stopId)
+          li.remove()
+          refresh()
+        } catch (err) {
+          console.error('Erreur retrait étape:', err)
+          setBusy(li, false)
+          confirmBox.hidden = true
+          showMessage(errorEl, apiErrorMessage(err, "Impossible de retirer cette étape. Réessaie."))
+        }
+      }
+    })
+
+    // Échap ferme les confirmations ouvertes
+    list.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeConfirms(null)
+    })
+
+    refresh()
   }
 
   // =============================

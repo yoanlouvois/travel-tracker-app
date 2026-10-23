@@ -2008,6 +2008,119 @@
   text-decoration: underline;
 }
 
+/* ----- retirer une étape ----- */
+.stop-actions {
+  margin-top: auto;           /* actions en bas de la carte */
+  padding-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.stop-actions .stop-link {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.stop-remove,
+.stop-confirm button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,80,80,0.35);
+  background: transparent;
+  color: #f3b4b4;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
+
+.stop-remove:hover:not(:disabled) {
+  background: #3a1f1f;
+  border-color: rgba(255,100,100,0.7);
+  color: #fff;
+}
+
+.stop-remove:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.stop-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,80,80,0.35);
+  background: rgba(90,31,31,0.25);
+  font-size: 0.85rem;
+}
+
+.stop-confirm-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.stop-confirm .stop-confirm-yes {
+  background: #3a1f1f;
+  border-color: rgba(255,80,80,0.5);
+}
+
+.stop-confirm .stop-confirm-yes:hover:not(:disabled) {
+  background: #5a2a2a;
+  color: #fff;
+}
+
+.stop-confirm .stop-confirm-no {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.stop-confirm .stop-confirm-no:hover:not(:disabled) {
+  background: var(--surface-3);
+}
+
+.stop-confirm button:disabled {
+  opacity: 0.5;
+  cursor: progress;
+}
+
+.stop-error {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(224,90,90,0.35);
+  background: var(--danger-soft);
+  color: #f3b4b4;
+  font-size: 0.85rem;
+}
+
+.stop.is-busy {
+  opacity: 0.6;
+}
+
+.stops-hint {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.stops-hint[hidden],
+.stop [hidden] {
+  display: none !important;
+}
+
 /* ----- carrousel de photos ----- */
 .carousel {
   position: relative;
@@ -3576,4 +3689,21 @@
   background: rgba(224,90,90,0.12);
   color: #f3b4b4;
   font-size: 0.75rem;
+}
+
+/* bouton rond sur une vignette (poubelle / retirer) : icône bien centrée.
+   Plus précis que .page-card [data-delete] (bouton des vlogs), donc il gagne. */
+.page-card .photo-tile .photo-action {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  gap: 0;
+  line-height: 1;
+}
+
+.page-card .photo-tile .photo-action i,
+.page-card .photo-tile .photo-action i::before {
+  display: block;
+  line-height: 1;
+  vertical-align: 0; /* annule le petit décalage vers le bas de Bootstrap Icons */
 }
