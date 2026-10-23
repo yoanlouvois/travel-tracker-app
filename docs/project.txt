@@ -1,59 +1,128 @@
 travel-map/
-├─ package.json
-├─ .env
+├─ package.json                  # scripts (start, app, dist...) + config electron-builder
+├─ package-lock.json
+├─ prisma.config.ts              # config Prisma 7 (schéma, migrations, DATABASE_URL)
+├─ .env                          # DATABASE_URL, NOMINATIM_USER_AGENT, NOMINATIM_EMAIL,
+│                                # UPLOADS_DIR (optionnel) (non versionné)               ◀
+├─ .env.example                  # modèle de .env (versionné)
+├─ .gitignore
 ├─ README.md
 │
 ├─ prisma/
-│  ├─ schema.prisma
-│  ├─ dev.db
-│  └─ migrations/
+│  ├─ schema.prisma              # générateur -> src/generated/prisma
+│  ├─ dev.db                     # base de développement (non versionnée)
+│  └─ migrations/                # versionnées : embarquées dans l'app
+│
+├─ electron/                     # APPLICATION DE BUREAU (Windows)
+│  ├─ main.js                    # données %AppData% (DATABASE_URL + UPLOADS_DIR),        ◀
+│  │                             # serveur sur 127.0.0.1, fenêtre, zoom
+│  └─ migrate.js                 # applique les migrations Prisma au démarrage (sans CLI)
+│
+├─ scripts/
+│  ├─ seed-countries.js          # remplit la table Country depuis le GeoJSON
+│  ├─ build-template-db.js       # crée build/template.db (base migrée + pays)
+│  └─ native.js                  # binaire better-sqlite3 pour Electron ou Node
+│
+├─ shared/
+│  └─ isoCodes.js                # conversions ISO2 <-> ISO3 (version Node)
+│
+├─ build/                        # ressources du packaging
+│  ├─ template.db                # généré par npm run db:template (non versionné)
+│  └─ icon.ico                   # icône de l'app (optionnelle, à ajouter)
+│
+├─ dist/                         # généré par npm run dist (non versionné)
+│  ├─ Travel Map Setup 1.0.0.exe # installateur à distribuer
+│  └─ win-unpacked/              # app sans installation (tests)
 │
 ├─ src/                          # BACK-END (Express + Prisma)
-│  ├─ server.js                  # démarre le serveur
-│  ├─ app.js                     # express app + middlewares + routes
-│  ├─ prisma.js                  # PrismaClient singleton
-│  ├─ routes.js                  # centralise toutes les routes /api
-│  ├─ errors.js                  # notFound + errorHandler + async wrapper
+│  ├─ server.js                  # startServer({ port, host }) ; npm start = port 8080
+│  ├─ app.js                     # middlewares, /uploads (UPLOADS_DIR), routes, erreurs JSON
+│  ├─ prisma.js                  # PrismaClient (./generated/prisma) + adaptateur better-sqlite3 ◀
+│  ├─ routes.js                  # toutes les routes /api, dont :                         ◀
+│  │                             #   POST   /places/:id/media     (photos / vidéos)       ◀
+│  │                             #   POST   /countries/:id/cover  (couverture)            ◀
+│  │                             #   DELETE /countries/:id/cover                          ◀
+│  ├─ errors.js                  # helpers d'erreurs (le gestionnaire est dans app.js)
+│  │
+│  ├─ generated/
+│  │  └─ prisma/                 # client Prisma généré (prisma generate, non versionné)
 │  │
 │  ├─ controllers/               # HTTP layer (req/res)
 │  │  ├─ places.controller.js
-│  │  ├─ countries.controller.js
+│  │  ├─ countries.controller.js # + ensureCountry, uploadCover, removeCover             ◀
 │  │  ├─ trips.controller.js
 │  │  ├─ vlogs.controller.js
-│  │  ├─ media.controller.js
-│  │  ├─ geocode.controller.js
+│  │  ├─ media.controller.js     # + ensurePlace, uploadForPlace                         ◀
+│  │  ├─ geocode.controller.js   # GET /api/geocode/search
+│  │  ├─ backup.controller.js    # GET /api/backup/export, POST /api/backup/import
 │  │  └─ stats.controller.js
 │  │
 │  ├─ services/                  # logique + Prisma
-│  │  ├─ places.service.js
-│  │  ├─ countries.service.js
-│  │  ├─ trips.service.js
+│  │  ├─ places.service.js       # suppression : retire le lieu des roadtrips          ◀
+│  │  │                          # + supprime ses fichiers médias
+│  │  ├─ countries.service.js    # setCover / removeCover (remplace et supprime l'ancien fichier) ◀
+│  │  ├─ trips.service.js        # création avec étapes, réordonnancement des étapes
 │  │  ├─ vlogs.service.js
-│  │  ├─ media.service.js
-│  │  ├─ geocode.service.js
+│  │  ├─ media.service.js        # createFromUploads (tout ou rien), suppression = fichier aussi ◀
+│  │  ├─ geocode.service.js      # Nominatim : file 1 req/s, cache 24 h
+│  │  ├─ backup.service.js       # export JSON + import par fusion (tout ou rien)
 │  │  └─ stats.service.js
 │  │
-│  └─ upload/                    # config upload (photos/vidéos)
-│     └─ multer.js
+│  └─ upload/                                                                            ◀
+│     ├─ multer.js               # types acceptés, limites (photo 20 Mo, vidéo 500 Mo,    ◀
+│     │                          # 30 fichiers), dossiers places/<id> et countries/<id>,
+│     │                          # erreurs 400 / 413 / 415 en français
+│     └─ files.js                # dossier d'upload, chemins /uploads <-> disque          ◀
+│                                # (anti-traversée), suppression de fichiers / dossiers vides
 │
 └─ public/                       # FRONT-END (Bootstrap + Leaflet)
-   ├─ index.html                 # écran principal (carte)
-   ├─ place.html                 # écran lieu
-   ├─ country.html               # écran pays
-   ├─ account.html               # écran compte (stats/vlogs/souvenirs)
+   ├─ index.html                 # carte + sidebar (recherche, filtres, données)
+   ├─ country.html               # pays visités | ?id= fiche pays (couverture : changer   ◀
+   │                             # / retirer, statut, chiffres, lieux)
+   ├─ place.html                 # ?id= fiche lieu : bande de photos (ajout, suppression,  ◀
+   │                             # visionneuse) puis infos modifiables - pas de liste
+   ├─ roadtrip.html              # liste des roadtrips | ?id= étapes + photos défilantes
+   ├─ vlogs.html                 # liste des vlogs | ?id= lecteur, infos, pays, suppression
+   ├─ countries.geo.json         # contours des pays (carte + seed)
+   │                             # (l'en-tête est copié dans chaque page, data-page="...")
    │
    ├─ css/
-   │  └─ style.css
+   │  └─ style.css               # styles globaux (carte, panneau, pages)
+   │
+   ├─ panels/                    # modèles du panneau d'info (carte uniquement)
+   │  ├─ country.html            # + lien vers la fiche pays
+   │  ├─ place.html              # nom, carrousel photos, formulaire, lien vers la fiche  ◀
+   │  └─ roadtrip.html           # + lien vers la fiche roadtrip                          ◀
    │
    ├─ js/
-   │  ├─ api.js                  # wrapper fetch + fonctions API
-   │  ├─ common.js               # helpers UI (toast, spinner, query params)
-   │  ├─ index.js                # logique écran principal
-   │  ├─ place.js                # logique écran lieu
-   │  ├─ country.js              # logique écran pays
-   │  └─ account.js              # logique écran compte
+   │  ├─ api.js                  # wrapper fetch + fonctions API (dont importBackup,       ◀
+   │  │                          # searchPlaces) + upload() avec progression :
+   │  │                          # uploadPlaceMedia, uploadCountryCover, deleteCountryCover
+   │  ├─ index.js                # carte : init des modules + sidebar
+   │  ├─ infoPanel.js            # panneau d'info de la carte (carrousel, liens vers les fiches) ◀
+   │  ├─ search.js               # recherche de lieux (Nominatim) + « Ajouter ce lieu »
+   │  ├─ backup.js               # import / export JSON (sidebar)
+   │  ├─ country.js              # page pays (+ envoi / retrait de la couverture)          ◀
+   │  ├─ place.js                # page lieu (+ envoi / suppression des médias)           ◀
+   │  ├─ roadtrip.js             # page roadtrips
+   │  ├─ vlogs.js                # page vlogs
+   │  │
+   │  └─ map/                    # modules de la carte (index.html uniquement)
+   │     ├─ toolManager.js       # un seul outil actif à la fois
+   │     ├─ isoCodes.js          # conversions ISO2 <-> ISO3 (version navigateur)
+   │     ├─ leafletPlaces.js     # marqueurs des lieux + filtres statut / type
+   │     ├─ leafletRoadtrip.js   # tracés des roadtrips
+   │     └─ leafletCountries.js  # couche des pays (visités / à visiter)
    │
-   └─ uploads/                   # fichiers stockés localement
-      ├─ places/
-      ├─ countries/
+   ├─ resources/                 # drapeaux (fr.png, sg.png…)
+   │
+   └─ uploads/                   # fichiers en développement (npm start / node server.js) ◀
+      ├─ places/<id>/            # photos et vidéos d'un lieu (non versionné)             ◀
+      ├─ countries/<id>/         # couverture d'un pays                                   ◀
       └─ vlogs/
+
+
+Données de l'app installée (hors projet) : %AppData%\Travel Map\
+├─ travel-map.db                 # copiée depuis template.db au premier lancement
+├─ uploads/                      # places/<id>/, countries/<id>/, vlogs/                    ◀
+└─ window.json                   # zoom de la fenêtre
