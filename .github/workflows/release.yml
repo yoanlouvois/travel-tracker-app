@@ -1,0 +1,50 @@
+name: Release
+
+# se lance quand on pousse un tag v1.0.0, v1.0.1...
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write   # nécessaire pour créer la Release
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    # pas de .env sur GitHub : valeurs pour le build uniquement
+    # (l'app installée utilise sa propre base dans %AppData%)
+    env:
+      DATABASE_URL: file:./dev.db
+      NOMINATIM_USER_AGENT: TravelMap/ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # le tag doit correspondre à "version" dans package.json
+      - name: Vérifier la version
+        shell: bash
+        run: |
+          PKG="v$(node -p "require('./package.json').version")"
+          if [ "$PKG" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME différent de package.json ($PKG)"; exit 1
+          fi
+
+      - name: Installer
+        run: npm ci          # lance aussi prisma generate (postinstall)
+
+      - name: Construire l'installateur
+        run: npm run dist -- --publish never
+
+      - name: Publier la Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*Setup*.exe
+          generate_release_notes: true
+          fail_on_unmatched_files: true
