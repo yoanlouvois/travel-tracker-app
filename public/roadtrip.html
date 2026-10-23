@@ -1,1 +1,183 @@
-<header id="appHeader" class="app-header" data-page="countries"></header>
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mes roadtrips · Travel Map</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+
+<body>
+  <div class="app">
+
+    <!-- HEADER -->
+    <header class="app-header" data-page="roadtrips">
+      <div class="header-inner">
+
+        <!-- Gauche : Menu sur la carte, retour à la carte sur les autres pages -->
+        <div class="header-left">
+          <button id="btnMenu" class="btn btn-header" type="button" aria-label="Menu" title="Menu" data-header-map-only>
+            <i class="bi bi-list" aria-hidden="true"></i>
+            <span class="btn-label">Menu</span>
+          </button>
+          <a class="btn btn-header" href="/" aria-label="Carte" title="Carte" data-header-pages-only>
+            <i class="bi bi-map" aria-hidden="true"></i>
+            <span class="btn-label">Carte</span>
+          </a>
+        </div>
+
+        <!-- Centre : titre (lien vers la carte) -->
+        <a class="header-center" href="/">
+          <h1 class="app-title">
+            <i class="bi bi-globe-europe-africa app-title-icon" aria-hidden="true"></i>
+            <span>Travel Map</span>
+          </h1>
+          <p class="app-subtitle">Carnet de voyages</p>
+        </a>
+
+        <!-- Droite : pays, places, roadtrips, vlogs -->
+        <nav class="header-right" aria-label="Navigation principale">
+          <a class="btn btn-header" href="/country.html" data-nav="countries" aria-label="Mes pays" title="Mes pays">
+            <i class="bi bi-globe2" aria-hidden="true"></i>
+            <span class="btn-label">Mes pays</span>
+          </a>
+          <a class="btn btn-header" href="/place.html" data-nav="places" aria-label="Mes places" title="Mes places">
+            <i class="bi bi-geo-alt" aria-hidden="true"></i>
+            <span class="btn-label">Mes places</span>
+          </a>
+          <a class="btn btn-header" href="/roadtrip.html" data-nav="roadtrips" aria-label="Mes roadtrips" title="Mes roadtrips">
+            <i class="bi bi-signpost-2" aria-hidden="true"></i>
+            <span class="btn-label">Mes roadtrips</span>
+          </a>
+          <a class="btn btn-header" href="/vlogs.html" data-nav="vlogs" aria-label="Mes vlogs" title="Mes vlogs">
+            <i class="bi bi-camera-reels" aria-hidden="true"></i>
+            <span class="btn-label">Mes vlogs</span>
+          </a>
+        </nav>
+
+      </div>
+    </header>
+
+    <main class="page">
+      <div class="page-inner">
+
+        <p class="page-loading" data-page-loading>Chargement…</p>
+        <p class="page-error" data-page-error hidden></p>
+
+        <!-- =====================================================
+             LISTE : /roadtrip.html
+        ====================================================== -->
+        <section data-view="list" hidden>
+          <div class="page-head">
+            <div>
+              <h2 class="page-title">Mes roadtrips</h2>
+              <p class="page-subtitle" data-field="summary"></p>
+            </div>
+          </div>
+
+          <ul class="trip-list" data-list="trips"></ul>
+          <p class="page-empty" data-empty="trips" hidden>
+            Aucun roadtrip pour l'instant. Sur la carte, utilise l'outil roadtrip
+            puis double-clique pour terminer.
+          </p>
+
+          <template data-item="trip">
+            <li>
+              <a class="trip-row" data-link>
+                <span class="trip-row-icon"><i class="bi bi-signpost-2" aria-hidden="true"></i></span>
+                <span class="trip-row-main">
+                  <span class="trip-row-name" data-field="name"></span>
+                  <span class="trip-row-meta" data-field="meta"></span>
+                </span>
+                <i class="bi bi-chevron-right trip-row-arrow" aria-hidden="true"></i>
+              </a>
+            </li>
+          </template>
+        </section>
+
+        <!-- =====================================================
+             DÉTAIL : /roadtrip.html?id=...
+        ====================================================== -->
+        <section data-view="detail" hidden>
+          <a class="back-link" href="/roadtrip.html">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i> Mes roadtrips
+          </a>
+
+          <div class="trip-head">
+            <span class="trip-head-icon"><i class="bi bi-signpost-2" aria-hidden="true"></i></span>
+            <div class="trip-head-text">
+              <h2 class="page-title" data-field="name"></h2>
+              <p class="trip-head-meta">
+                <span class="trip-chip" data-dates>
+                  <i class="bi bi-calendar3" aria-hidden="true"></i>
+                  <span data-field="dates"></span>
+                </span>
+                <span class="trip-chip">
+                  <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                  <span data-field="stepCount"></span>
+                </span>
+              </p>
+              <p class="trip-head-description" data-field="description"></p>
+            </div>
+          </div>
+
+          <!-- Étapes dans l'ordre -->
+          <ol class="stops" data-list="stops"></ol>
+          <p class="page-empty" data-empty="stops" hidden>Ce roadtrip n'a aucune étape.</p>
+
+          <template data-item="stop">
+            <li class="stop">
+              <span class="stop-marker" data-field="index" aria-hidden="true"></span>
+
+              <article class="stop-card">
+                <!-- Défilement des photos -->
+                <div class="carousel" data-carousel>
+                  <div class="carousel-track" data-track tabindex="0"></div>
+
+                  <button type="button" class="carousel-btn carousel-prev" data-prev aria-label="Photo précédente">
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                  </button>
+                  <button type="button" class="carousel-btn carousel-next" data-next aria-label="Photo suivante">
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                  </button>
+
+                  <span class="carousel-counter" data-counter></span>
+                  <div class="carousel-dots" data-dots></div>
+
+                  <div class="carousel-empty" data-carousel-empty hidden>
+                    <i class="bi bi-image" aria-hidden="true"></i>
+                    <span>Pas encore de photo</span>
+                  </div>
+                </div>
+
+                <div class="stop-body">
+                  <span class="stop-step">Étape <span data-field="index"></span></span>
+                  <h3 class="stop-title" data-field="title"></h3>
+                  <p class="stop-meta">
+                    <span class="stop-date" data-stop-date>
+                      <i class="bi bi-calendar3" aria-hidden="true"></i>
+                      <span data-field="date"></span>
+                    </span>
+                    <span data-field="details"></span>
+                  </p>
+                  <p class="stop-description" data-field="description"></p>
+                  <a class="stop-link" data-place-link>
+                    Voir le lieu <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                  </a>
+                </div>
+              </article>
+            </li>
+          </template>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/roadtrip.js"></script>
+</body>
+</html>

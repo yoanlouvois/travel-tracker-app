@@ -1614,6 +1614,487 @@
 }
 
 /* =========================
+   PAGE ROADTRIPS : LISTE
+========================= */
+
+.trip-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 720px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trip-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-soft);
+  background: var(--surface-1);
+  color: var(--text);
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.trip-row:hover {
+  background: var(--surface-2);
+  border-color: rgba(120,200,160,0.45);
+  color: #fff;
+  transform: translateX(3px);
+}
+
+.trip-row:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.5);
+  outline-offset: 2px;
+}
+
+.trip-row-icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(120,200,160,0.4);
+  background: rgba(120,200,160,0.12);
+  color: var(--roadtrip);
+  font-size: 1.05rem;
+}
+
+.trip-row-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.trip-row-name {
+  font-weight: 600;
+  font-size: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trip-row-meta {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.trip-row-arrow {
+  flex: none;
+  color: var(--muted);
+  transition: color 0.2s ease;
+}
+
+.trip-row:hover .trip-row-arrow {
+  color: var(--roadtrip);
+}
+
+/* =========================
+   PAGE ROADTRIPS : DÉTAIL
+========================= */
+
+.trip-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 22px;
+  border-radius: 16px;
+  border: 1px solid var(--border-soft);
+  background:
+    linear-gradient(120deg, rgba(120,200,160,0.10), transparent 60%),
+    var(--sidebar-bg);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+
+.trip-head-icon {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid rgba(120,200,160,0.5);
+  background: rgba(120,200,160,0.12);
+  color: var(--roadtrip);
+  font-size: 1.4rem;
+}
+
+.trip-head-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.trip-head-meta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.trip-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: #ccc;
+  font-size: 0.8rem;
+}
+
+.trip-head-description {
+  margin: 0;
+  color: #cfcfcf;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+/* ----- frise des étapes ----- */
+.stops {
+  --marker-size: 40px;
+  --stop-gap: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stop-gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ligne verticale : du repère d'une étape jusqu'au repère de la suivante */
+.stop:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--marker-size) / 2);
+  left: calc(var(--marker-size) / 2 - 1px);
+  width: 2px;
+  height: calc(100% + var(--stop-gap));
+  background: rgba(120,200,160,0.45);
+}
+
+.stop {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--marker-size) 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.stop-marker {
+  position: relative;
+  z-index: 1;
+  width: var(--marker-size);
+  height: var(--marker-size);
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid rgba(120,200,160,0.8);
+  background: #1b2a23;
+  color: var(--roadtrip);
+  font-weight: 700;
+  box-shadow: 0 0 0 4px var(--bg-map-1);
+}
+
+.stop:first-child .stop-marker,
+.stop:last-child .stop-marker {
+  background: var(--visited);
+  color: #fff;
+}
+
+.stop-card {
+  display: grid;
+  grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+  border-radius: 14px;
+  border: 1px solid var(--border-soft);
+  background: var(--sidebar-bg);
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+
+.stop-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
+  min-width: 0;
+}
+
+.stop-step {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--roadtrip);
+}
+
+.stop-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+
+.stop-meta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.stop-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #ddd;
+}
+
+.stop-description {
+  margin: 4px 0 0;
+  color: #cfcfcf;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre-line;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.stop-link {
+  margin-top: auto;
+  padding-top: 8px;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--roadtrip);
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.stop-link:hover {
+  text-decoration: underline;
+}
+
+/* ----- carrousel de photos ----- */
+.carousel {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: #111;
+  overflow: hidden;
+}
+
+.carousel-track {
+  display: flex;
+  height: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none; /* Firefox */
+  overscroll-behavior-x: contain;
+}
+
+.carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+.carousel-track:focus-visible {
+  outline: 2px solid rgba(255,255,255,0.5);
+  outline-offset: -4px;
+}
+
+.carousel-slide {
+  position: relative;
+  flex: 0 0 100%;
+  height: 100%;
+  margin: 0;
+  scroll-snap-align: start;
+}
+
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
+.carousel-slide figcaption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 28px 14px 30px;
+  background: linear-gradient(to top, rgba(0,0,0,0.75), transparent);
+  color: #fff;
+  font-size: 0.8rem;
+}
+
+/* image introuvable */
+.carousel-slide.is-broken img {
+  visibility: hidden;
+}
+
+.carousel-slide.is-broken::after {
+  content: "Image introuvable";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(20,20,20,0.6);
+  color: #fff;
+  backdrop-filter: blur(6px);
+  transform: translateY(-50%);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+
+.carousel-prev { left: 10px; }
+.carousel-next { right: 10px; }
+
+/* boutons visibles au survol, au clavier, et toujours sur écran tactile */
+.carousel:hover .carousel-btn,
+.carousel:focus-within .carousel-btn {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .carousel-btn {
+    opacity: 1;
+  }
+}
+
+.carousel-btn:hover:not(:disabled) {
+  background: rgba(40,40,40,0.85);
+}
+
+.carousel-btn:disabled {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+.carousel-counter {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(20,20,20,0.65);
+  color: #fff;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.carousel-dots {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10px;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.45);
+  cursor: pointer;
+  transition: width 0.2s ease, background 0.2s ease;
+}
+
+.carousel-dot[aria-current="true"] {
+  width: 20px;
+  background: #fff;
+}
+
+.carousel-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #2a2a2a, #1c1c1c);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.carousel-empty i {
+  font-size: 2rem;
+  color: rgba(255,255,255,0.25);
+}
+
+/* écrans moyens : photo au-dessus du texte */
+@media (max-width: 820px) {
+  .stop-card {
+    grid-template-columns: 1fr;
+  }
+
+  .carousel {
+    aspect-ratio: 16 / 10;
+  }
+}
+
+@media (max-width: 600px) {
+  .stops {
+    --marker-size: 32px;
+  }
+
+  .stop {
+    gap: 10px;
+  }
+
+  .stop-marker {
+    font-size: 0.85rem;
+  }
+
+  .trip-head {
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .trip-head-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.1rem;
+  }
+}
+
+/* =========================
    PETITS ÉCRANS : panneau plein largeur
 ========================= */
 @media (max-width: 600px){
