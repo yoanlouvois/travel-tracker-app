@@ -6,6 +6,7 @@
 // Dépend de : window.Api (api.js)
 //   POST   /api/places/:id/media  (champ "files", plusieurs fichiers) -> médias créés
 //   DELETE /api/media/:id                                            -> supprime aussi le fichier
+// Photos HEIC (iPhone) : acceptées, converties en JPEG par le serveur.
 
 (function () {
   // =============================
@@ -32,6 +33,10 @@
   const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
   const VIDEO_TYPES = ['video/mp4', 'video/webm']
   const LIMITS = { photo: 20 * MB, video: 500 * MB, filesPerUpload: 30 }
+
+  // HEIC : sous Windows le type est souvent vide, on regarde aussi l'extension
+  const HEIC_TYPES = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence']
+  const HEIC_EXTENSIONS = ['.heic', '.heif']
 
   // =============================
   // HELPERS
@@ -98,6 +103,11 @@
 
   function formatSize(bytes) {
     return `${(bytes / MB).toFixed(1).replace('.', ',')} Mo`
+  }
+
+  function isHeic(file) {
+    const name = String(file?.name || '').toLowerCase()
+    return HEIC_TYPES.includes(file?.type) || HEIC_EXTENSIONS.some((ext) => name.endsWith(ext))
   }
 
   function isVideo(media) {
@@ -425,15 +435,22 @@
     const cancelBtn = panel.querySelector('[data-upload-cancel]')
     const messageEl = panel.querySelector('[data-upload-message]')
     const progressEl = panel.querySelector('[data-upload-progress]')
+    const statusEl = panel.querySelector('[data-upload-status]')
     const pendingList = panel.querySelector('[data-list="pending"]')
 
-    let pending = [] // [{ file, url }]
+    let pending = [] // [{ file, url, heic }] (url null pour un HEIC : pas d'aperçu)
     let busy = false
 
     function render() {
       fillList(panel, 'pending', 'pending', pending, (node, p, i) => {
         node.dataset.index = i
-        setThumb(node, p.url, VIDEO_TYPES.includes(p.file.type), p.file.name)
+        if (p.heic) {
+          // le navigateur ne sait pas afficher le HEIC : vignette de remplacement
+          node.classList.add('is-heic')
+          node.querySelector('[data-heic]').hidden = false
+        } else {
+          setThumb(node, p.url, VIDEO_TYPES.includes(p.file.type), p.file.name)
+        }
         setField(node, 'filename', p.file.name)
         node.querySelector('[data-pending-remove]').disabled = busy
       })
@@ -450,19 +467,31 @@
     }
 
     // fraction entre 0 et 1, null = masquer
+    // à 100 % les fichiers sont envoyés mais le serveur travaille encore
+    // (conversion HEIC, enregistrement) : on l'indique, sinon ça semble bloqué
     function setProgress(fraction) {
       if (fraction == null) {
         progressEl.hidden = true
         progressEl.value = 0
+        showMessage(statusEl, null)
         return
       }
       progressEl.hidden = false
       progressEl.value = Math.round(fraction * 100)
+
+      if (fraction < 1) {
+        showMessage(statusEl, `Envoi… ${Math.round(fraction * 100)} %`)
+        return
+      }
+      const heicCount = pending.filter((p) => p.heic).length
+      showMessage(statusEl, heicCount
+        ? `Conversion de ${heicCount > 1 ? `${heicCount} photos HEIC` : 'la photo HEIC'}… (quelques secondes par photo)`
+        : 'Enregistrement…')
     }
 
     // raison du refus d'un fichier, ou null s'il est accepté
     function rejectReason(file) {
-      if (IMAGE_TYPES.includes(file.type)) {
+      if (IMAGE_TYPES.includes(file.type) || isHeic(file)) {
         return file.size > LIMITS.photo ? `trop lourde (${formatSize(file.size)}, 20 Mo max)` : null
       }
       if (VIDEO_TYPES.includes(file.type)) {
@@ -485,7 +514,8 @@
           problems.push(`${file.name} : ${LIMITS.filesPerUpload} fichiers maximum par envoi`)
           continue
         }
-        pending.push({ file, url: URL.createObjectURL(file) })
+        const heic = isHeic(file)
+        pending.push({ file, heic, url: heic ? null : URL.createObjectURL(file) })
       }
 
       showMessage(messageEl, problems.length ? `Fichiers ignorés — ${problems.join(' · ')}` : null)
@@ -494,7 +524,7 @@
     }
 
     function reset() {
-      pending.forEach((p) => URL.revokeObjectURL(p.url))
+      pending.forEach((p) => { if (p.url) URL.revokeObjectURL(p.url) })
       pending = []
       setProgress(null)
       showMessage(messageEl, null)
@@ -525,7 +555,7 @@
     pendingList.addEventListener('click', (e) => {
       if (busy || !e.target.closest('[data-pending-remove]')) return
       const i = Number(e.target.closest('.photo-tile').dataset.index)
-      URL.revokeObjectURL(pending[i].url)
+      if (pending[i].url) URL.revokeObjectURL(pending[i].url)
       pending.splice(i, 1)
       render()
     })

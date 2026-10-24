@@ -35,6 +35,11 @@
   const COVER_TYPES = ['image/jpeg', 'image/png', 'image/webp']
   const COVER_MAX_BYTES = 20 * 1024 * 1024
 
+  // HEIC (iPhone) : accepté, converti en JPEG par le serveur.
+  // Sous Windows le type est souvent vide : on regarde aussi l'extension.
+  const HEIC_TYPES = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence']
+  const HEIC_EXTENSIONS = ['.heic', '.heif']
+
   // =============================
   // HELPERS
   // =============================
@@ -79,6 +84,11 @@
       // pas du JSON : erreur réseau, etc.
     }
     return fallback
+  }
+
+  function isHeic(file) {
+    const name = String(file?.name || '').toLowerCase()
+    return HEIC_TYPES.includes(file?.type) || HEIC_EXTENSIONS.some((ext) => name.endsWith(ext))
   }
 
   function plural(count, singular, pluralForm) {
@@ -366,6 +376,8 @@
     const cancelBtn = editor.querySelector('[data-cover-cancel]')
     const removeBtn = editor.querySelector('[data-cover-remove]')
     const previewTag = detailView.querySelector('[data-preview-tag]')
+    const heicNote = editor.querySelector('[data-cover-heic-note]')
+    const statusEl = editor.querySelector('[data-cover-status]')
     const drop = editor.querySelector('.cover-drop')
 
     const defaultFilename = filenameEl.textContent
@@ -392,14 +404,23 @@
     }
 
     // fraction entre 0 et 1, null = masquer
+    // à 100 % le fichier est envoyé mais le serveur travaille encore
+    // (conversion HEIC, enregistrement) : on l'indique, sinon ça semble bloqué
     function setProgress(fraction) {
       if (fraction == null) {
         progressEl.hidden = true
         progressEl.value = 0
+        showMessage(statusEl, null)
         return
       }
       progressEl.hidden = false
       progressEl.value = Math.round(fraction * 100)
+
+      if (fraction >= 1) {
+        showMessage(statusEl, isHeic(pendingFile) ? 'Conversion de la photo HEIC…' : 'Enregistrement…')
+      } else {
+        showMessage(statusEl, `Envoi… ${Math.round(fraction * 100)} %`)
+      }
     }
 
     // oublie le fichier choisi et réaffiche la vraie couverture
@@ -410,6 +431,7 @@
       input.value = ''
       filenameEl.textContent = defaultFilename
       previewTag.hidden = true
+      heicNote.hidden = true
       setProgress(null)
       renderCover(country.uiCoverImagePath)
       refreshControls()
@@ -425,8 +447,9 @@
     function preview(file) {
       if (!file || busy) return
 
-      if (!COVER_TYPES.includes(file.type)) {
-        showMessage(messageEl, 'Choisis une image JPG, PNG ou WebP.')
+      const heic = isHeic(file)
+      if (!heic && !COVER_TYPES.includes(file.type)) {
+        showMessage(messageEl, 'Choisis une image JPG, PNG, WebP ou HEIC.')
         return
       }
       if (file.size > COVER_MAX_BYTES) {
@@ -435,12 +458,21 @@
       }
 
       if (previewUrl) URL.revokeObjectURL(previewUrl)
-      previewUrl = URL.createObjectURL(file)
+      previewUrl = null
       pendingFile = file
 
-      renderCover(previewUrl)
+      if (heic) {
+        // le navigateur ne sait pas afficher le HEIC : on garde la couverture actuelle
+        renderCover(country.uiCoverImagePath)
+        previewTag.hidden = true
+      } else {
+        previewUrl = URL.createObjectURL(file)
+        renderCover(previewUrl)
+        previewTag.hidden = false
+      }
+
+      heicNote.hidden = !heic
       filenameEl.textContent = file.name
-      previewTag.hidden = false
       showMessage(messageEl, null)
       refreshControls()
     }

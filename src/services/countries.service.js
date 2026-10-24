@@ -6,6 +6,7 @@ const {
   removeDiskFiles,
   removeDirIfEmpty,
 } = require('../upload/files')
+const { convertIfHeic } = require('../upload/heic')
 
 // =================================================
 // HELPERS
@@ -100,12 +101,17 @@ async function remove(id) {
 // COUVERTURE
 // =================================================
 // file : req.file de multer ({ path }) - l'image est déjà écrite sur le disque.
+// Une image HEIC (iPhone) est d'abord convertie en JPEG.
 // Remplace la couverture et supprime l'ancienne image.
 async function setCover(id, file) {
   if (!file) throw httpError(400, 'Aucune image reçue (champ "cover").')
 
   try {
     const current = await getById(id)
+
+    // HEIC -> JPEG ; met à jour file.path
+    await convertIfHeic(file)
+
     const updated = await prisma.country.update({
       where: { id },
       data: { uiCoverImagePath: toPublicPath(file.path) },
@@ -117,7 +123,7 @@ async function setCover(id, file) {
     }
     return updated
   } catch (err) {
-    await removeDiskFiles([file.path]) // nouvelle image inutile
+    await removeDiskFiles([file.path]) // nouvelle image inutile (ou sa version convertie)
     throw mapNotFound(err)
   }
 }

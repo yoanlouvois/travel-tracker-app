@@ -114,15 +114,16 @@
             <!-- Ajout : choisir / glisser des fichiers, puis envoyer -->
             <div class="upload-panel" data-upload-panel hidden>
               <label class="cover-drop">
-                <input type="file" multiple accept="image/jpeg,image/png,image/webp,video/mp4,video/webm" data-upload-input>
+                <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif,video/mp4,video/webm" data-upload-input>
                 <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
                 <span class="cover-drop-title">Choisir ou glisser des fichiers…</span>
-                <span class="cover-drop-hint">Photos JPG, PNG, WebP (20 Mo max) · vidéos MP4, WebM (500 Mo max) · 30 fichiers max par envoi</span>
+                <span class="cover-drop-hint">Photos JPG, PNG, WebP, HEIC (20 Mo max) · vidéos MP4, WebM (500 Mo max) · 30 fichiers max par envoi</span>
               </label>
 
               <ul class="photo-grid" data-list="pending"></ul>
 
               <progress class="upload-progress" max="100" value="0" data-upload-progress hidden></progress>
+              <p class="form-hint" data-upload-status hidden></p>
               <p data-upload-message hidden></p>
 
               <div class="btn-row">
@@ -136,6 +137,12 @@
                 <li class="photo-tile is-pending">
                   <img data-img alt="" hidden>
                   <video data-video muted preload="metadata" hidden></video>
+                  <!-- HEIC : pas d'aperçu possible dans le navigateur -->
+                  <span class="photo-heic" data-heic hidden>
+                    <i class="bi bi-file-earmark-image" aria-hidden="true"></i>
+                    <strong>HEIC</strong>
+                    <small>converti en JPEG à l'envoi</small>
+                  </span>
                   <span class="photo-tag">À envoyer</span>
                   <button type="button" class="photo-action" data-pending-remove aria-label="Retirer ce fichier">
                     <i class="bi bi-x-lg" aria-hidden="true"></i>

@@ -129,17 +129,24 @@
             <h6>Image de couverture</h6>
 
             <label class="cover-drop">
-              <input type="file" accept="image/jpeg,image/png,image/webp" data-cover-input>
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" data-cover-input>
               <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
               <span class="cover-drop-title" data-cover-filename>Choisir une image…</span>
-              <span class="cover-drop-hint">JPG, PNG ou WebP · 20 Mo max · format paysage conseillé</span>
+              <span class="cover-drop-hint">JPG, PNG, WebP ou HEIC (iPhone) · 20 Mo max · format paysage conseillé</span>
             </label>
 
             <p class="form-hint">
               La nouvelle image remplace l'ancienne couverture, qui est supprimée.
             </p>
 
+            <!-- photo HEIC : pas d'aperçu possible dans le navigateur -->
+            <p class="form-hint cover-heic-note" data-cover-heic-note hidden>
+              <i class="bi bi-info-circle" aria-hidden="true"></i>
+              Photo HEIC : pas d'aperçu possible ici, elle sera convertie en JPEG à l'envoi.
+            </p>
+
             <progress class="upload-progress" max="100" value="0" data-cover-progress hidden></progress>
+            <p class="form-hint" data-cover-status hidden></p>
             <p data-cover-message hidden></p>
 
             <div class="btn-row">

@@ -1,10 +1,12 @@
 // src/services/media.service.js
 // Médias (photos / vidéos) d'un lieu : lignes Media en base + fichiers sur le disque.
+// Les photos HEIC (iPhone) sont converties en JPEG avant l'écriture en base.
 
 const fs = require('fs')
 const path = require('path')
 const prisma = require('../prisma')
 const { LIMITS, isVideo } = require('../upload/multer')
+const { convertAllHeic } = require('../upload/heic')
 const {
   toPublicPath,
   removePublicFile,
@@ -116,19 +118,20 @@ async function create(data = {}) {
 // =================================================
 // files : req.files de multer ([{ path, mimetype, size, originalname }])
 // Renvoie les médias créés, dans l'ordre d'envoi.
-// En cas d'erreur, les fichiers reçus sont supprimés du disque.
+// En cas d'erreur, les fichiers reçus (ou leur version convertie) sont supprimés du disque.
 async function createFromUploads(placeId, files = []) {
-  const diskPaths = files.map((f) => f.path)
-
   try {
     if (!files.length) throw httpError(400, 'Aucun fichier reçu (champ "files").')
     await assertPlaceExists(placeId)
 
-    // les photos ont une limite plus basse que les vidéos
+    // les photos ont une limite plus basse que les vidéos (HEIC compris, avant conversion)
     const tooBig = files.find((f) => !isVideo(f.mimetype) && f.size > LIMITS.photo)
     if (tooBig) {
       throw httpError(413, `Photo trop volumineuse : "${tooBig.originalname}" (${LIMITS.photo / MB} Mo maximum).`)
     }
+
+    // HEIC -> JPEG (une photo à la fois) ; met à jour file.path / mimetype
+    await convertAllHeic(files)
 
     const start = await nextSortOrder(placeId)
 
@@ -145,6 +148,8 @@ async function createFromUploads(placeId, files = []) {
       }))
     )
   } catch (err) {
+    // chemins lus maintenant : un HEIC déjà converti a changé de chemin (.jpg)
+    const diskPaths = files.map((f) => f.path).filter(Boolean)
     await removeDiskFiles(diskPaths)
     // dossier du lieu créé pour rien (ex : lieu inexistant) -> supprimé s'il est vide
     if (diskPaths[0]) await fs.promises.rmdir(path.dirname(diskPaths[0])).catch(() => {})
