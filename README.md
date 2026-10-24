@@ -193,3 +193,187 @@ Without a cover, the country flag is used as background.
 ### Vlogs
 
 **Mes vlogs** (*My vlogs*, in the header) gathers your travel videos — YouTube or Vimeo links, or video files — and links each vlog to one or more countries.
+
+## Backup and data
+ 
+### Where is my data?
+ 
+Everything is stored on your computer, in your user folder:
+ 
+```
+%AppData%\Travel Map\
+├─ travel-map.db     # countries, places, roadtrips and vlogs
+├─ uploads\          # photos, videos and country covers
+└─ window.json       # window zoom level
+```
+ 
+To open it: press **Win + R**, type `%AppData%\Travel Map` and press **Enter**.
+ 
+### Export / import
+ 
+In the side menu, section **Données** (*Data*):
+ 
+- **Exporter** (*Export*) saves all your data in a `.json` file.
+- **Importer** (*Import*) loads a `.json` file. The import **adds** what is missing (countries' status, places, photos, roadtrips, vlogs) and never deletes anything; if the file is invalid, nothing is imported.
+> ⚠️ The JSON file contains the **paths** of your photos, not the photos themselves.
+> Keep a copy of the `uploads\` folder with it.
+ 
+### Move to another PC
+ 
+The simplest way:
+ 
+1. Close Travel Map on both PCs.
+2. Copy the whole `%AppData%\Travel Map\` folder from the old PC.
+3. Install Travel Map on the new PC, launch it once, close it.
+4. Replace its `%AppData%\Travel Map\` folder with your copy.
+With export / import instead (to merge data into an existing installation):
+ 
+1. On the old PC, **export** your data and copy the `%AppData%\Travel Map\uploads\` folder.
+2. On the new PC, paste the content of `uploads\` into `%AppData%\Travel Map\uploads\`, then **import** the JSON file.
+---
+ 
+## Update
+ 
+1. **Export** your data, just in case.
+2. Close Travel Map.
+3. Download the latest installer from the [**Releases**](https://github.com/<your-github-user>/WorldTracker/releases/latest) page and run it.
+The new version replaces the old one. Your data in `%AppData%\Travel Map\` is kept, and the database is updated automatically on the next launch if needed.
+ 
+---
+ 
+## Uninstall
+ 
+1. Close Travel Map.
+2. **Settings** → **Apps** → **Installed apps** → **Travel Map** → **Uninstall**.
+Uninstalling does **not** delete your data. To erase everything, also delete the folder `%AppData%\Travel Map\` (**Win + R**, type `%AppData%`, then delete the `Travel Map` folder).
+ 
+---
+ 
+## Development
+ 
+### Tech stack
+ 
+- **Front-end**: HTML, CSS, vanilla JavaScript, Bootstrap 5, Leaflet
+- **Back-end**: Node.js, Express 5, Prisma 7, SQLite (better-sqlite3)
+- **Desktop**: Electron, electron-builder (NSIS installer)
+- **Place search**: OpenStreetMap Nominatim
+### Run locally
+ 
+**Prerequisites**: [Node.js](https://nodejs.org/) 22 or later, [Git](https://git-scm.com/).
+ 
+```bash
+git clone https://github.com/<your-github-user>/WorldTracker.git
+cd WorldTracker
+npm install                 # also generates the Prisma client
+```
+ 
+Create the `.env` file (see below), then the database:
+ 
+```bash
+npx prisma migrate dev      # creates the SQLite database
+npm run seed:countries      # fills the country list
+npm start
+```
+ 
+Open `http://localhost:8080`. Uploaded files go to `public/uploads/`.
+ 
+### Environment variables
+ 
+Copy `.env.example` to `.env`:
+ 
+```bash
+cp .env.example .env        # PowerShell: Copy-Item .env.example .env
+```
+ 
+| Variable               | Required | Description                                            |
+|------------------------|----------|--------------------------------------------------------|
+| `DATABASE_URL`         | yes      | Development database, e.g. `file:./dev.db`              |
+| `NOMINATIM_USER_AGENT` | yes      | Identifies the app to Nominatim (place search)          |
+| `NOMINATIM_EMAIL`      | no       | Contact e-mail sent to Nominatim (recommended)          |
+| `UPLOADS_DIR`          | no       | Upload folder (default: `public/uploads`)               |
+| `PORT`                 | no       | Server port for `npm start` (default: `8080`)           |
+ 
+### Run as a desktop app
+ 
+```bash
+npm run db:template         # once: builds build/template.db
+npm run app
+```
+ 
+Opens the Electron window. It uses the same data folder as the installed app (`%AppData%\Travel Map\`).
+ 
+### Build the installer
+ 
+```bash
+npm run dist
+```
+ 
+The installer is created in `dist/Travel Map Setup x.y.z.exe` (`dist/win-unpacked/` contains the app without installer, for testing).
+ 
+Releases are also built by **GitHub Actions** (`.github/workflows/release.yml`) when a version tag is pushed. The tag must match `version` in `package.json`:
+ 
+```bash
+git tag v1.1.0
+git push origin v1.1.0
+```
+ 
+### Project structure
+ 
+```
+WorldTracker/
+├─ package.json              # scripts (start, app, dist…) + electron-builder config
+├─ prisma.config.ts          # Prisma 7 config
+├─ .env.example              # environment variables template
+├─ .github/workflows/
+│  └─ release.yml            # builds the installer and publishes a release on tag
+│
+├─ prisma/
+│  ├─ schema.prisma          # data model (client generated in src/generated/prisma)
+│  └─ migrations/            # SQL migrations (shipped with the app)
+│
+├─ electron/                 # desktop app
+│  ├─ main.js                # data in %AppData%, local server on 127.0.0.1, window, zoom
+│  └─ migrate.js             # applies migrations on startup
+│
+├─ scripts/
+│  ├─ seed-countries.js      # fills the Country table from the GeoJSON
+│  ├─ build-template-db.js   # builds build/template.db (migrated database + countries)
+│  └─ native.js              # better-sqlite3 binary for Electron or Node
+│
+├─ shared/
+│  └─ isoCodes.js            # ISO2 <-> ISO3 country codes
+│
+├─ src/                      # back-end (Express + Prisma)
+│  ├─ server.js              # starts the server
+│  ├─ app.js                 # middlewares, static files, /uploads, JSON errors
+│  ├─ prisma.js              # Prisma client + better-sqlite3 adapter
+│  ├─ routes.js              # all /api routes
+│  ├─ controllers/           # HTTP layer: countries, places, trips, vlogs, media,
+│  │                         # geocode, backup, stats
+│  ├─ services/              # business logic + database
+│  └─ upload/
+│     ├─ multer.js           # accepted types and size limits
+│     ├─ heic.js             # HEIC -> JPEG conversion
+│     └─ files.js            # upload paths and file deletion
+│
+└─ public/                   # front-end
+   ├─ index.html             # map + side menu
+   ├─ country.html           # My countries / country page
+   ├─ place.html             # place page
+   ├─ roadtrip.html          # My roadtrips / roadtrip page
+   ├─ vlogs.html             # My vlogs / vlog page
+   ├─ countries.geo.json     # country borders (map + seed)
+   ├─ css/style.css
+   ├─ panels/                # info panel templates (country, place, roadtrip)
+   ├─ js/
+   │  ├─ api.js              # calls to the /api routes (incl. uploads with progress)
+   │  ├─ index.js            # map page start-up
+   │  ├─ infoPanel.js        # info panel
+   │  ├─ search.js           # place search
+   │  ├─ backup.js           # export / import
+   │  ├─ country.js, place.js, roadtrip.js, vlogs.js   # pages
+   │  └─ map/                # map modules: tools, countries, places, roadtrips
+   └─ resources/             # flags (fr.png, mc.png…)
+```
+ 
+Not versioned: `.env`, `prisma/dev.db`, `src/generated/`, `build/template.db`, `dist/`, `public/uploads/`.
