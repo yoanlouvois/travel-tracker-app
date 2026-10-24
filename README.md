@@ -10,12 +10,12 @@ Everything stays **on your computer**: no account, no cloud, no tracking.
 <table>
   <tr>
     <td align="center" width="50%">
-      <img src="LIEN_IMAGE_CARTE" alt="World map with visited countries and places" width="100%" />
+      <img src="https://github.com/user-attachments/assets/0ce96745-6d08-45f0-99d1-ed5148deaa0e" alt="World map with visited countries and places" width="100%" />
       <br />
       <sub><b>The world map</b> — visited and to-visit countries, places and roadtrips</sub>
     </td>
     <td align="center" width="50%">
-      <img src="LIEN_IMAGE_MONTREAL" alt="Info panel opened on Montréal" width="100%" />
+      <img src="https://github.com/user-attachments/assets/505545f9-72d6-4edd-a9b0-1d4d6bad71b2" alt="Info panel opened on Montréal" width="100%" />
       <br />
       <sub><b>Info panel</b> — click a place (here Montréal) to see and edit it</sub>
     </td>
